@@ -32,6 +32,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local revert plan for the hosted Supabase project
+/supabase/revert-quiz.sql
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

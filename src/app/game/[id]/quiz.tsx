@@ -1,5 +1,9 @@
+import { CorrectIcon, IncorrectIcon } from '@/components/quiz-types/icons'
+import QuestionProgress from '@/components/quiz-types/question-progress'
+import { getQuizVariant } from '@/components/quiz-types/registry'
+import { PlayerAnswer } from '@/components/quiz-types/types'
 import { QUESTION_ANSWER_TIME, TIME_TIL_CHOICE_REVEAL } from '@/constants'
-import { Choice, Question, supabase } from '@/types/types'
+import { Question, supabase } from '@/types/types'
 import { useState, useEffect } from 'react'
 import { ColorFormat, CountdownCircleTimer } from 'react-countdown-circle-timer'
 
@@ -14,22 +18,24 @@ export default function Quiz({
   participantId: string
   isAnswerRevealed: boolean
 }) {
-  const [chosenChoice, setChosenChoice] = useState<Choice | null>(null)
+  const [playerAnswer, setPlayerAnswer] = useState<PlayerAnswer | null>(null)
 
   const [hasShownChoices, setHasShownChoices] = useState(false)
 
   const [questionStartTime, setQuestionStartTime] = useState(Date.now())
 
+  const { PlayerView } = getQuizVariant(question)
+
   useEffect(() => {
-    setChosenChoice(null)
+    setPlayerAnswer(null)
     setHasShownChoices(false)
   }, [question.id])
 
-  const answer = async (choice: Choice) => {
-    setChosenChoice(choice)
+  const answer = async (newAnswer: PlayerAnswer) => {
+    setPlayerAnswer(newAnswer)
 
     const now = Date.now()
-    const score = !choice.is_correct
+    const score = !newAnswer.isCorrect
       ? 0
       : 1000 -
         Math.round(
@@ -42,11 +48,11 @@ export default function Quiz({
     const { error } = await supabase.from('answers').insert({
       participant_id: playerId,
       question_id: question.id,
-      choice_id: choice.id,
+      choice_id: newAnswer.choiceId,
       score,
     })
     if (error) {
-      setChosenChoice(null)
+      setPlayerAnswer(null)
       alert(error.message)
     }
   }
@@ -59,7 +65,7 @@ export default function Quiz({
         </h2>
       </div>
 
-      {!isAnswerRevealed && chosenChoice && (
+      {!isAnswerRevealed && playerAnswer && (
         <div className="flex-grow flex justify-center items-center">
           <div className="text-white text-2xl text-center p-4">
             Wait for others to answer...
@@ -85,123 +91,30 @@ export default function Quiz({
         </div>
       )}
 
-      {hasShownChoices && !isAnswerRevealed && !chosenChoice && (
+      {hasShownChoices && !isAnswerRevealed && !playerAnswer && (
         <div className="flex-grow flex flex-col items-stretch">
           <div className="flex-grow"></div>
-          <div className="flex justify-between flex-wrap p-4">
-            {question.choices.map((choice, index) => (
-              <div key={choice.id} className="w-1/2 p-1">
-                <button
-                  onClick={() => answer(choice)}
-                  disabled={chosenChoice !== null || isAnswerRevealed}
-                  className={`px-4 py-6 w-full text-xl rounded text-white flex justify-between md:text-2xl md:font-bold
-              ${
-                index === 0
-                  ? 'bg-red-500'
-                  : index === 1
-                  ? 'bg-blue-500'
-                  : index === 2
-                  ? 'bg-yellow-500'
-                  : 'bg-green-500'
-              }
-              ${isAnswerRevealed && !choice.is_correct ? 'opacity-60' : ''}
-             `}
-                >
-                  <div>{choice.body}</div>
-                  {isAnswerRevealed && (
-                    <div>
-                      {choice.is_correct && (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={5}
-                          stroke="currentColor"
-                          className="w-6 h-6"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="m4.5 12.75 6 6 9-13.5"
-                          />
-                        </svg>
-                      )}
-                      {!choice.is_correct && (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={5}
-                          stroke="currentColor"
-                          className="w-6 h-6"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M6 18 18 6M6 6l12 12"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                  )}
-                </button>
-              </div>
-            ))}
-          </div>
+          <PlayerView question={question} onAnswer={answer} />
         </div>
       )}
 
       {isAnswerRevealed && (
         <div className="flex-grow flex justify-center items-center flex-col">
           <h2 className="text-white text-2xl text-center pb-2">
-            {chosenChoice?.is_correct ? 'Correct' : 'Incorrect'}
+            {playerAnswer?.isCorrect ? 'Correct' : 'Incorrect'}
           </h2>
           <div
             className={`text-white rounded-full p-4  ${
-              chosenChoice?.is_correct ? 'bg-green-500' : 'bg-red-500'
+              playerAnswer?.isCorrect ? 'bg-green-500' : 'bg-red-500'
             }`}
           >
-            {chosenChoice?.is_correct && (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={5}
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="m4.5 12.75 6 6 9-13.5"
-                />
-              </svg>
-            )}
-            {!chosenChoice?.is_correct && (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={5}
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18 18 6M6 6l12 12"
-                />
-              </svg>
-            )}
+            {playerAnswer?.isCorrect && <CorrectIcon />}
+            {!playerAnswer?.isCorrect && <IncorrectIcon />}
           </div>
         </div>
       )}
 
-      <div className="flex text-white py-2 px-4 items-center bg-black">
-        <div className="text-2xl">
-          {question.order + 1}/{questionCount}
-        </div>
-      </div>
+      <QuestionProgress question={question} questionCount={questionCount} />
     </div>
   )
 }
