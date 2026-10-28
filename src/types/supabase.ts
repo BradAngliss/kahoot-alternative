@@ -45,14 +45,14 @@ isOneToOne: false
                   ]
                 },"choices": {
                   Row: {
-                    "body": string,"created_at": string,"id": string,"is_correct": boolean,"question_id": string
+                    "body": string,"created_at": string,"id": string,"is_correct": boolean,"position": number | null,"question_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "body": string,"created_at"?: string,"id"?: string,"is_correct"?: boolean,"question_id": string
+                    "body": string,"created_at"?: string,"id"?: string,"is_correct"?: boolean,"position"?: number | null,"question_id": string
                   }
                   Update: {
-                    "body"?: string,"created_at"?: string,"id"?: string,"is_correct"?: boolean,"question_id"?: string
+                    "body"?: string,"created_at"?: string,"id"?: string,"is_correct"?: boolean,"position"?: number | null,"question_id"?: string
                   }
                   Relationships: [
                     {
@@ -158,19 +158,19 @@ isOneToOne: false
           }
           Functions: {
             "add_question":
-{ Args: { "body": string,"choices": (Json)[],"order": number,"quiz_set_id": string,"settings"?: Json,"type"?: Database["public"]['Enums']["question_type"] }; Returns: undefined
+{ Args: { "body": string,"choices"?: (Json)[],"order": number,"quiz_set_id": string,"settings"?: Json,"type"?: Database["public"]['Enums']["question_type"] }; Returns: undefined
                            },
 "grade_answer":
 { Args: { "question": Omit<Database["public"]['Tables']["questions"]['Row'], Database["public"]['Tables']["questions"]['ComputedFields']>,"response": Json }; Returns: number
                            },
 "submit_answer":
 { Args: { "participant_id": string,"question_id": string,"response": Json }; Returns: {
-              "is_correct": boolean,"score": number
+              "correctness": number,"is_correct": boolean,"score": number
             }[]
                            }
           }
           Enums: {
-            "question_type": "multiple_choice"
+            "question_type": "multiple_choice"|"true_false"|"multi_select"|"type_answer"|"slider"|"ordering"|"poll"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -286,7 +286,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "question_type": ["multiple_choice"]
+            "question_type": ["multiple_choice", "true_false", "multi_select", "type_answer", "slider", "ordering", "poll"]
           }
         }
 } as const

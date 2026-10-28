@@ -800,3 +800,94 @@ select
     ]
   );
 
+-- question types demo: one question of each type
+insert into public.quiz_sets
+    (id, name, description)
+    values ('6f1d3c2a-8b4e-4f7a-9c5d-2e1b0a9f8c7d', 'Question Types Demo', 'One question of each type');
+
+select
+  add_question (
+    quiz_set_id => '6f1d3c2a-8b4e-4f7a-9c5d-2e1b0a9f8c7d'::uuid,
+    body => 'Which of these is a Postgres extension?'::text,
+    "order" => 0,
+    choices => array[
+      '{"body": "pgvector", "is_correct": true}'::json,
+      '{"body": "React", "is_correct": false}'::json,
+      '{"body": "Tailwind", "is_correct": false}'::json,
+      '{"body": "Docker", "is_correct": false}'::json
+    ]
+  );
+
+select
+  add_question (
+    quiz_set_id => '6f1d3c2a-8b4e-4f7a-9c5d-2e1b0a9f8c7d'::uuid,
+    body => 'Supabase is built on top of Postgres.'::text,
+    "order" => 1,
+    type => 'true_false',
+    choices => array[
+      '{"body": "True", "is_correct": true}'::json,
+      '{"body": "False", "is_correct": false}'::json
+    ]
+  );
+
+select
+  add_question (
+    quiz_set_id => '6f1d3c2a-8b4e-4f7a-9c5d-2e1b0a9f8c7d'::uuid,
+    body => 'Which of these are Supabase products?'::text,
+    "order" => 2,
+    type => 'multi_select',
+    choices => array[
+      '{"body": "Auth", "is_correct": true}'::json,
+      '{"body": "Storage", "is_correct": true}'::json,
+      '{"body": "Realtime", "is_correct": true}'::json,
+      '{"body": "Kubernetes", "is_correct": false}'::json
+    ]
+  );
+
+select
+  add_question (
+    quiz_set_id => '6f1d3c2a-8b4e-4f7a-9c5d-2e1b0a9f8c7d'::uuid,
+    body => 'What does the "S" in SQL stand for?'::text,
+    "order" => 3,
+    type => 'type_answer',
+    settings => '{"accepted_answers": ["Structured"]}'::jsonb
+  );
+
+select
+  add_question (
+    quiz_set_id => '6f1d3c2a-8b4e-4f7a-9c5d-2e1b0a9f8c7d'::uuid,
+    body => 'In what year was the name PostgreSQL first used?'::text,
+    "order" => 4,
+    type => 'slider',
+    settings => '{"min": 1980, "max": 2020, "step": 1, "answer": 1996, "margin": 5}'::jsonb
+  );
+
+-- For ordering questions, list the choices in the correct order
+select
+  add_question (
+    quiz_set_id => '6f1d3c2a-8b4e-4f7a-9c5d-2e1b0a9f8c7d'::uuid,
+    body => 'Put these languages in the order they were first released'::text,
+    "order" => 5,
+    type => 'ordering',
+    choices => array[
+      '{"body": "C"}'::json,
+      '{"body": "Python"}'::json,
+      '{"body": "JavaScript"}'::json,
+      '{"body": "TypeScript"}'::json
+    ]
+  );
+
+select
+  add_question (
+    quiz_set_id => '6f1d3c2a-8b4e-4f7a-9c5d-2e1b0a9f8c7d'::uuid,
+    body => 'Which Supabase feature do you use most?'::text,
+    "order" => 6,
+    type => 'poll',
+    choices => array[
+      '{"body": "Database"}'::json,
+      '{"body": "Auth"}'::json,
+      '{"body": "Storage"}'::json,
+      '{"body": "Edge Functions"}'::json
+    ]
+  );
+

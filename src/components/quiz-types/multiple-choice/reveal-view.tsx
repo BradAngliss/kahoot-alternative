@@ -1,12 +1,13 @@
 import { choiceColor } from '../colors'
+import { answerChoiceIds } from '../json'
 import { RevealViewProps } from '../types'
 
 export default function RevealView({ question, answers }: RevealViewProps) {
   return (
     <div className="flex justify-center">
       {question.choices.map((choice, index) => {
-        const choiceAnswerCount = answers.filter(
-          (answer) => answer.choice_id === choice.id
+        const choiceAnswerCount = answers.filter((answer) =>
+          answerChoiceIds(answer).includes(choice.id)
         ).length
 
         return (

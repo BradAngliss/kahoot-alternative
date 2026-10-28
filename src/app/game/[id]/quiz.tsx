@@ -1,7 +1,7 @@
 import { CorrectIcon, IncorrectIcon } from '@/components/quiz-types/icons'
 import QuestionProgress from '@/components/quiz-types/question-progress'
 import { getQuizVariant } from '@/components/quiz-types/registry'
-import { AnswerResponse } from '@/components/quiz-types/types'
+import { AnswerResponse, AnswerResult } from '@/components/quiz-types/types'
 import { TIME_TIL_CHOICE_REVEAL } from '@/constants'
 import { Question, supabase } from '@/types/types'
 import { useState, useEffect } from 'react'
@@ -20,15 +20,15 @@ export default function Quiz({
 }) {
   const [playerAnswer, setPlayerAnswer] = useState<AnswerResponse | null>(null)
 
-  const [isCorrect, setIsCorrect] = useState(false)
+  const [result, setResult] = useState<AnswerResult | null>(null)
 
   const [hasShownChoices, setHasShownChoices] = useState(false)
 
-  const { PlayerView } = getQuizVariant(question)
+  const { PlayerView, scored } = getQuizVariant(question)
 
   useEffect(() => {
     setPlayerAnswer(null)
-    setIsCorrect(false)
+    setResult(null)
     setHasShownChoices(false)
   }, [question.id])
 
@@ -48,8 +48,15 @@ export default function Quiz({
       return alert(error.message)
     }
 
-    setIsCorrect(data.is_correct)
+    setResult({
+      isCorrect: data.is_correct,
+      correctness: data.correctness,
+      score: data.score,
+    })
   }
+
+  // Partly right, e.g. a slider guess near the answer
+  const isClose = !!result && !result.isCorrect && result.correctness > 0
 
   return (
     <div className="h-screen flex flex-col items-stretch bg-slate-900 relative">
@@ -91,19 +98,34 @@ export default function Quiz({
         </div>
       )}
 
-      {isAnswerRevealed && (
+      {isAnswerRevealed && !scored && (
+        <div className="flex-grow flex justify-center items-center">
+          <h2 className="text-white text-2xl text-center p-4">
+            {playerAnswer ? 'Thanks for voting' : 'You did not vote'}
+          </h2>
+        </div>
+      )}
+
+      {isAnswerRevealed && scored && (
         <div className="flex-grow flex justify-center items-center flex-col">
           <h2 className="text-white text-2xl text-center pb-2">
-            {isCorrect ? 'Correct' : 'Incorrect'}
+            {result?.isCorrect ? 'Correct' : isClose ? 'Close!' : 'Incorrect'}
           </h2>
           <div
             className={`text-white rounded-full p-4  ${
-              isCorrect ? 'bg-green-500' : 'bg-red-500'
+              result?.isCorrect
+                ? 'bg-green-500'
+                : isClose
+                ? 'bg-yellow-500'
+                : 'bg-red-500'
             }`}
           >
-            {isCorrect && <CorrectIcon />}
-            {!isCorrect && <IncorrectIcon />}
+            {(result?.isCorrect || isClose) && <CorrectIcon />}
+            {!result?.isCorrect && !isClose && <IncorrectIcon />}
           </div>
+          {isClose && (
+            <p className="text-white text-xl pt-2">+{result.score} points</p>
+          )}
         </div>
       )}
 
