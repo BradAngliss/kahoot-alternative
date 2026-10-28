@@ -1,10 +1,12 @@
 import { Answer, Question } from '@/types/types'
 import { ComponentType } from 'react'
 
-/** What a player submitted for a question, as the shared quiz screens need it. */
-export type PlayerAnswer = {
-  choiceId: string | null
-  isCorrect: boolean
+/**
+ * What a player submits for a question, stored in answers.response and graded
+ * by grade_answer in the database. Each question type adds its own shape.
+ */
+export type AnswerResponse = {
+  choice_ids: string[]
 }
 
 export type HostViewProps = {
@@ -19,7 +21,7 @@ export type RevealViewProps = {
 
 export type PlayerViewProps = {
   question: Question
-  onAnswer: (answer: PlayerAnswer) => void
+  onAnswer: (response: AnswerResponse) => void
 }
 
 /**

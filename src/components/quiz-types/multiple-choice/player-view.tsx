@@ -7,9 +7,7 @@ export default function PlayerView({ question, onAnswer }: PlayerViewProps) {
       {question.choices.map((choice, index) => (
         <div key={choice.id} className="w-1/2 p-1">
           <button
-            onClick={() =>
-              onAnswer({ choiceId: choice.id, isCorrect: choice.is_correct })
-            }
+            onClick={() => onAnswer({ choice_ids: [choice.id] })}
             className={`px-4 py-6 w-full text-xl rounded text-white flex justify-between md:text-2xl md:font-bold
             ${choiceColor(index)}
            `}

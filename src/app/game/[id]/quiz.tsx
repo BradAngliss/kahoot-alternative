@@ -1,8 +1,8 @@
 import { CorrectIcon, IncorrectIcon } from '@/components/quiz-types/icons'
 import QuestionProgress from '@/components/quiz-types/question-progress'
 import { getQuizVariant } from '@/components/quiz-types/registry'
-import { PlayerAnswer } from '@/components/quiz-types/types'
-import { QUESTION_ANSWER_TIME, TIME_TIL_CHOICE_REVEAL } from '@/constants'
+import { AnswerResponse } from '@/components/quiz-types/types'
+import { TIME_TIL_CHOICE_REVEAL } from '@/constants'
 import { Question, supabase } from '@/types/types'
 import { useState, useEffect } from 'react'
 import { ColorFormat, CountdownCircleTimer } from 'react-countdown-circle-timer'
@@ -18,43 +18,37 @@ export default function Quiz({
   participantId: string
   isAnswerRevealed: boolean
 }) {
-  const [playerAnswer, setPlayerAnswer] = useState<PlayerAnswer | null>(null)
+  const [playerAnswer, setPlayerAnswer] = useState<AnswerResponse | null>(null)
+
+  const [isCorrect, setIsCorrect] = useState(false)
 
   const [hasShownChoices, setHasShownChoices] = useState(false)
-
-  const [questionStartTime, setQuestionStartTime] = useState(Date.now())
 
   const { PlayerView } = getQuizVariant(question)
 
   useEffect(() => {
     setPlayerAnswer(null)
+    setIsCorrect(false)
     setHasShownChoices(false)
   }, [question.id])
 
-  const answer = async (newAnswer: PlayerAnswer) => {
-    setPlayerAnswer(newAnswer)
+  const answer = async (response: AnswerResponse) => {
+    setPlayerAnswer(response)
 
-    const now = Date.now()
-    const score = !newAnswer.isCorrect
-      ? 0
-      : 1000 -
-        Math.round(
-          Math.max(
-            0,
-            Math.min((now - questionStartTime) / QUESTION_ANSWER_TIME, 1)
-          ) * 1000
-        )
-
-    const { error } = await supabase.from('answers').insert({
-      participant_id: playerId,
-      question_id: question.id,
-      choice_id: newAnswer.choiceId,
-      score,
-    })
+    // The database grades the answer and scores it by how long the player took
+    const { data, error } = await supabase
+      .rpc('submit_answer', {
+        participant_id: playerId,
+        question_id: question.id,
+        response,
+      })
+      .single()
     if (error) {
       setPlayerAnswer(null)
-      alert(error.message)
+      return alert(error.message)
     }
+
+    setIsCorrect(data.is_correct)
   }
 
   return (
@@ -78,7 +72,6 @@ export default function Quiz({
           <CountdownCircleTimer
             onComplete={() => {
               setHasShownChoices(true)
-              setQuestionStartTime(Date.now())
             }}
             isPlaying
             duration={TIME_TIL_CHOICE_REVEAL / 1000}
@@ -101,15 +94,15 @@ export default function Quiz({
       {isAnswerRevealed && (
         <div className="flex-grow flex justify-center items-center flex-col">
           <h2 className="text-white text-2xl text-center pb-2">
-            {playerAnswer?.isCorrect ? 'Correct' : 'Incorrect'}
+            {isCorrect ? 'Correct' : 'Incorrect'}
           </h2>
           <div
             className={`text-white rounded-full p-4  ${
-              playerAnswer?.isCorrect ? 'bg-green-500' : 'bg-red-500'
+              isCorrect ? 'bg-green-500' : 'bg-red-500'
             }`}
           >
-            {playerAnswer?.isCorrect && <CorrectIcon />}
-            {!playerAnswer?.isCorrect && <IncorrectIcon />}
+            {isCorrect && <CorrectIcon />}
+            {!isCorrect && <IncorrectIcon />}
           </div>
         </div>
       )}
