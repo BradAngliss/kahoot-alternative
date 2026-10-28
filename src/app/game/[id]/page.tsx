@@ -101,7 +101,7 @@ export default function Home({
   }, [gameId])
 
   return (
-    <main className="bg-green-500 min-h-screen">
+    <main className="stage">
       {currentScreen == Screens.lobby && (
         <Lobby
           onRegisterCompleted={onRegisterCompleted}
@@ -117,18 +117,68 @@ export default function Home({
         ></Quiz>
       )}
       {currentScreen == Screens.results && (
-        <Results participant={participant!}></Results>
+        <Results participant={participant!} gameId={gameId}></Results>
       )}
     </main>
   )
 }
 
-function Results({ participant }: { participant: Participant }) {
+function Results({
+  participant,
+  gameId,
+}: {
+  participant: Participant
+  gameId: string
+}) {
+  // This player's place and points, once the results are in
+  const [standing, setStanding] = useState<{
+    rank: number
+    totalScore: number
+  } | null>(null)
+
+  useEffect(() => {
+    const getStanding = async () => {
+      const { data } = await supabase
+        .from('game_results')
+        .select()
+        .eq('game_id', gameId)
+        .order('total_score', { ascending: false })
+      const index =
+        data?.findIndex((result) => result.participant_id === participant.id) ??
+        -1
+      if (data && index >= 0) {
+        setStanding({ rank: index + 1, totalScore: data[index].total_score ?? 0 })
+      }
+    }
+    getStanding()
+  }, [gameId, participant.id])
+
   return (
-    <div className="flex justify-center items-center min-h-screen text-center">
-      <div className="p-8 bg-black text-white rounded-lg">
-        <h2 className="text-2xl pb-4">Hey {participant.nickname}！</h2>
-        <p>Thanks for playing 🎉</p>
+    <div className="flex min-h-screen items-center justify-center px-4 text-center">
+      <div className="card w-full max-w-sm animate-pop-in p-8">
+        <p className="text-sm font-semibold uppercase tracking-widest text-ink/60">
+          Game over
+        </p>
+        <h2 className="break-words py-2 font-display text-4xl font-extrabold">
+          {participant.nickname}
+        </h2>
+        {standing && (
+          <div className="flex justify-center gap-3 py-4">
+            <div className="rounded-xl border-2 border-ink bg-choice-yellow px-5 py-3">
+              <div className="font-display text-3xl font-extrabold">
+                #{standing.rank}
+              </div>
+              <div className="text-sm font-semibold">Place</div>
+            </div>
+            <div className="rounded-xl border-2 border-ink bg-choice-green px-5 py-3">
+              <div className="font-display text-3xl font-extrabold tabular-nums">
+                {standing.totalScore}
+              </div>
+              <div className="text-sm font-semibold">Points</div>
+            </div>
+          </div>
+        )}
+        <p className="text-ink/70">Thanks for playing 🎉</p>
       </div>
     </div>
   )

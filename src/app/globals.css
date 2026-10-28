@@ -2,11 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-    padding: 0;
-    /* background-color: black;
-    background-image: url('/background.jpg');
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat; */
+@layer base {
+  body {
+    @apply bg-mist font-sans text-ink antialiased;
+  }
+}
+
+@layer components {
+  /* Violet background for the game screens, with a soft glow at the top */
+  .stage {
+    @apply min-h-screen bg-stage text-white;
+    background-image: radial-gradient(
+        circle at 50% -10%,
+        theme('colors.stage.light') 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        circle at 100% 100%,
+        theme('colors.stage.dark') 0%,
+        transparent 50%
+      );
+  }
+
+  .card {
+    @apply rounded-2xl border-2 border-ink bg-white text-ink shadow-chunky;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-ink px-5 py-3 font-display text-lg font-bold shadow-chunky transition;
+    @apply hover:-translate-y-0.5 active:translate-y-1 active:shadow-none;
+    @apply disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:active:translate-y-0 disabled:active:shadow-chunky;
+  }
+
+  .btn-primary {
+    @apply bg-white text-ink;
+  }
+
+  .btn-accent {
+    @apply bg-choice-yellow text-ink;
+  }
+
+  .btn-dark {
+    @apply bg-ink text-white;
+  }
+
+  .input {
+    @apply w-full rounded-xl border-2 border-ink bg-white px-4 py-3 text-lg text-ink shadow-chunky placeholder:text-ink/40;
+    @apply focus:outline-none focus:ring-4 focus:ring-choice-yellow/60;
+  }
+
+  /* An answer tile: coloured background, outline and hard shadow */
+  .choice {
+    @apply flex w-full items-center gap-3 rounded-2xl border-2 border-ink px-4 py-4 text-left font-display text-xl font-bold text-ink shadow-chunky transition;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-sm font-semibold text-white;
+  }
 }

@@ -126,7 +126,7 @@ export default function Home({
   const [currentQuestionSequence, setCurrentQuestionSequence] = useState(0)
 
   return (
-    <main className="bg-green-600 min-h-screen">
+    <main className="stage">
       {currentScreen == AdminScreens.lobby && (
         <Lobby participants={participants} gameId={gameId}></Lobby>
       )}

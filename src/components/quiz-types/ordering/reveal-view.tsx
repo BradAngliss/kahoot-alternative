@@ -15,17 +15,21 @@ export default function RevealView({ question, answers }: RevealViewProps) {
   )
 
   return (
-    <div className="text-center">
-      <div className="text-6xl pb-2">
-        {fullyCorrect}/{answers.length}
+    <div className="flex flex-col items-center gap-4 text-center">
+      <div>
+        <div className="font-display text-6xl font-extrabold tabular-nums">
+          {fullyCorrect}/{answers.length}
+        </div>
+        <div className="text-xl font-semibold text-white/80">got the whole order right</div>
       </div>
-      <div className="text-3xl pb-4">Got the whole order right</div>
       {answers.length > 0 && (
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-3">
           {placedCorrectly.map((count, index) => (
-            <div key={correctIds[index]} className="mx-2 w-24">
-              <div className="text-2xl">{Math.round((count * 100) / answers.length)}%</div>
-              <div className="text-lg">placed #{index + 1}</div>
+            <div key={correctIds[index]} className="card w-28 px-3 py-2">
+              <div className="font-display text-2xl font-extrabold tabular-nums">
+                {Math.round((count * 100) / answers.length)}%
+              </div>
+              <div className="text-sm font-semibold text-ink/60">placed #{index + 1}</div>
             </div>
           ))}
         </div>
