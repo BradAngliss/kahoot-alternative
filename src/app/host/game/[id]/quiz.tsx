@@ -1,6 +1,6 @@
 import QuestionProgress from '@/components/quiz-types/question-progress'
 import { getQuizVariant } from '@/components/quiz-types/registry'
-import { TIME_TIL_CHOICE_REVEAL } from '@/constants'
+import { TIME_TIL_CHOICE_REVEAL, TIME_TIL_NEXT_QUESTION } from '@/constants'
 import { Answer, Participant, Question, supabase } from '@/types/types'
 import { useEffect, useRef, useState } from 'react'
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
@@ -28,7 +28,17 @@ export default function Quiz({
 
   const { HostView, RevealView } = getQuizVariant(question)
 
+  // Seconds left before moving on automatically, while the answer is shown
+  const [secondsUntilNext, setSecondsUntilNext] = useState<number | null>(null)
+
+  // The question already moved on from, so pressing Next as the countdown
+  // ends only moves on once
+  const advancedFromRef = useRef<string | null>(null)
+
   const getNextQuestion = async () => {
+    if (advancedFromRef.current === question.id) return
+    advancedFromRef.current = question.id
+
     var updateData
     if (questionCount == question.order + 1) {
       updateData = { phase: 'result' }
@@ -44,9 +54,15 @@ export default function Quiz({
       .update(updateData)
       .eq('id', gameId)
     if (error) {
+      // Let the host try again with Next
+      advancedFromRef.current = null
       return alert(error.message)
     }
   }
+
+  // Latest getNextQuestion, so the countdown below doesn't restart every render
+  const getNextQuestionRef = useRef(getNextQuestion)
+  getNextQuestionRef.current = getNextQuestion
 
   const onTimeUp = async () => {
     setIsAnswerRevealed(true)
@@ -97,6 +113,27 @@ export default function Quiz({
     }
   }, [question.id])
 
+  // Once the answer is shown, count down and move on to the next question
+  useEffect(() => {
+    if (!isAnswerRevealed) {
+      setSecondsUntilNext(null)
+      return
+    }
+
+    let remaining = TIME_TIL_NEXT_QUESTION / 1000
+    setSecondsUntilNext(remaining)
+    const interval = setInterval(() => {
+      remaining -= 1
+      setSecondsUntilNext(remaining)
+      if (remaining <= 0) {
+        clearInterval(interval)
+        getNextQuestionRef.current()
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [isAnswerRevealed, question.id])
+
   return (
     <div className="h-screen flex flex-col items-stretch bg-slate-900 relative">
       <div className="absolute right-4 top-4">
@@ -105,7 +142,7 @@ export default function Quiz({
             className="p-2 bg-white text-black rounded hover:bg-gray-200"
             onClick={getNextQuestion}
           >
-            Next
+            {secondsUntilNext === null ? 'Next' : `Next in ${secondsUntilNext}s`}
           </button>
         )}
       </div>
