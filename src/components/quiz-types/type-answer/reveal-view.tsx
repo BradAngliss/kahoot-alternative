@@ -11,7 +11,8 @@ export default function RevealView({ question, answers }: RevealViewProps) {
   const counts = new Map<string, { text: string; count: number }>()
   for (const answer of answers) {
     const text = answerText(answer)
-    if (text === null) continue
+    // Blank answers sent when time ran out aren't worth listing
+    if (text === null || !text.trim()) continue
     const key = normalizeText(text)
     const existing = counts.get(key)
     counts.set(key, { text: existing?.text ?? text.trim(), count: (existing?.count ?? 0) + 1 })

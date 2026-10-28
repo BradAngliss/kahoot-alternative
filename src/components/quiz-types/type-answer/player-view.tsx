@@ -1,8 +1,12 @@
 import { FormEvent, useState } from 'react'
 import { PlayerViewProps } from '../types'
+import { useAutoSubmit } from '../use-auto-submit'
 
-export default function PlayerView({ onAnswer }: PlayerViewProps) {
+export default function PlayerView({ onAnswer, isTimeUp }: PlayerViewProps) {
   const [text, setText] = useState('')
+
+  // When time runs out, whatever is typed is sent, even if it's blank
+  useAutoSubmit(isTimeUp, () => onAnswer({ text }))
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()

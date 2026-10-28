@@ -2,9 +2,16 @@ import { useState } from 'react'
 import { choiceColor } from '../colors'
 import { CorrectIcon } from '../icons'
 import { PlayerViewProps } from '../types'
+import { useAutoSubmit } from '../use-auto-submit'
 
-export default function PlayerView({ question, onAnswer }: PlayerViewProps) {
+export default function PlayerView({ question, onAnswer, isTimeUp }: PlayerViewProps) {
   const [pickedIds, setPickedIds] = useState<string[]>([])
+
+  // Nothing ticked means nothing to send
+  const submit = () => {
+    if (pickedIds.length > 0) onAnswer({ choice_ids: pickedIds })
+  }
+  useAutoSubmit(isTimeUp, submit)
 
   const toggle = (choiceId: string) =>
     setPickedIds((ids) =>
@@ -37,7 +44,7 @@ export default function PlayerView({ question, onAnswer }: PlayerViewProps) {
         })}
       </div>
       <button
-        onClick={() => onAnswer({ choice_ids: pickedIds })}
+        onClick={submit}
         disabled={pickedIds.length === 0}
         className="mt-2 w-full py-4 text-xl rounded font-bold bg-white text-black disabled:opacity-50"
       >

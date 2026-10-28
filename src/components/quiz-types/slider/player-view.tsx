@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { sliderSettings } from '../json'
 import { PlayerViewProps } from '../types'
+import { useAutoSubmit } from '../use-auto-submit'
 import { formatValue } from './format'
 
-export default function PlayerView({ question, onAnswer }: PlayerViewProps) {
+export default function PlayerView({ question, onAnswer, isTimeUp }: PlayerViewProps) {
   const settings = sliderSettings(question)
   const step = settings.step ?? 1
 
@@ -11,6 +12,10 @@ export default function PlayerView({ question, onAnswer }: PlayerViewProps) {
   const [value, setValue] = useState(
     settings.min + Math.round((settings.max - settings.min) / 2 / step) * step
   )
+
+  // Sent even if the slider was never moved
+  const submit = () => onAnswer({ value })
+  useAutoSubmit(isTimeUp, submit)
 
   return (
     <div className="p-4">
@@ -32,7 +37,7 @@ export default function PlayerView({ question, onAnswer }: PlayerViewProps) {
         <div>{formatValue(settings.max, settings)}</div>
       </div>
       <button
-        onClick={() => onAnswer({ value })}
+        onClick={submit}
         className="mt-2 w-full py-4 text-xl rounded font-bold bg-white text-black"
       >
         Submit

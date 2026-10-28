@@ -2,9 +2,13 @@ import { CorrectIcon, IncorrectIcon } from '@/components/quiz-types/icons'
 import QuestionProgress from '@/components/quiz-types/question-progress'
 import { getQuizVariant } from '@/components/quiz-types/registry'
 import { AnswerResponse, AnswerResult } from '@/components/quiz-types/types'
-import { TIME_TIL_CHOICE_REVEAL } from '@/constants'
+import {
+  AUTO_SUBMIT_EARLY,
+  QUESTION_ANSWER_TIME,
+  TIME_TIL_CHOICE_REVEAL,
+} from '@/constants'
 import { Question, supabase } from '@/types/types'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ColorFormat, CountdownCircleTimer } from 'react-countdown-circle-timer'
 
 export default function Quiz({
@@ -24,15 +28,34 @@ export default function Quiz({
 
   const [hasShownChoices, setHasShownChoices] = useState(false)
 
+  // Set just before time runs out, so unsubmitted answers are sent
+  const [isTimeUp, setIsTimeUp] = useState(false)
+
+  // Stops a second submit, e.g. tapping Submit just as time runs out
+  const isSubmittingRef = useRef(false)
+
   const { PlayerView, scored } = getQuizVariant(question)
 
   useEffect(() => {
     setPlayerAnswer(null)
     setResult(null)
     setHasShownChoices(false)
+    setIsTimeUp(false)
+    isSubmittingRef.current = false
   }, [question.id])
 
+  useEffect(() => {
+    if (!hasShownChoices) return
+    const timeout = setTimeout(
+      () => setIsTimeUp(true),
+      QUESTION_ANSWER_TIME - AUTO_SUBMIT_EARLY
+    )
+    return () => clearTimeout(timeout)
+  }, [hasShownChoices])
+
   const answer = async (response: AnswerResponse) => {
+    if (isSubmittingRef.current) return
+    isSubmittingRef.current = true
     setPlayerAnswer(response)
 
     // The database grades the answer and scores it by how long the player took
@@ -44,7 +67,10 @@ export default function Quiz({
       })
       .single()
     if (error) {
+      isSubmittingRef.current = false
       setPlayerAnswer(null)
+      // An automatic submit that arrived too late shouldn't interrupt the reveal
+      if (isTimeUp) return console.error(error.message)
       return alert(error.message)
     }
 
@@ -94,7 +120,7 @@ export default function Quiz({
       {hasShownChoices && !isAnswerRevealed && !playerAnswer && (
         <div className="flex-grow flex flex-col items-stretch">
           <div className="flex-grow"></div>
-          <PlayerView question={question} onAnswer={answer} />
+          <PlayerView question={question} onAnswer={answer} isTimeUp={isTimeUp} />
         </div>
       )}
 

@@ -1,6 +1,6 @@
 import { Participant, supabase } from '@/types/types'
 import { on } from 'events'
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState } from 'react'
 
 export default function Lobby({
   gameId,
@@ -10,6 +10,11 @@ export default function Lobby({
   onRegisterCompleted: (participant: Participant) => void
 }) {
   const [participant, setParticipant] = useState<Participant | null>(null)
+
+  // The parent passes a new callback on every render. Keeping the latest one
+  // in a ref means the check below runs once per game, not on every render.
+  const onRegisterCompletedRef = useRef(onRegisterCompleted)
+  onRegisterCompletedRef.current = onRegisterCompleted
 
   useEffect(() => {
     const fetchParticipant = async () => {
@@ -43,12 +48,12 @@ export default function Lobby({
 
       if (participantData) {
         setParticipant(participantData)
-        onRegisterCompleted(participantData)
+        onRegisterCompletedRef.current(participantData)
       }
     }
 
     fetchParticipant()
-  }, [gameId, onRegisterCompleted])
+  }, [gameId])
 
   return (
     <div className="bg-green-500 flex justify-center items-center min-h-screen">

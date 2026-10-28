@@ -45,6 +45,11 @@ export type RevealViewProps = {
 export type PlayerViewProps = {
   question: Question
   onAnswer: (response: AnswerResponse) => void
+  /**
+   * Becomes true just before time runs out. Views with a Submit button then
+   * send whatever is on screen (see useAutoSubmit).
+   */
+  isTimeUp: boolean
 }
 
 /**

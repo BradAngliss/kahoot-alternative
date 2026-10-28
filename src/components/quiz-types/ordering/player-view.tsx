@@ -19,10 +19,15 @@ import { useState } from 'react'
 import { choiceColor } from '../colors'
 import { choicesInPosition, shuffled } from '../json'
 import { PlayerViewProps } from '../types'
+import { useAutoSubmit } from '../use-auto-submit'
 import { Choice } from '@/types/types'
 
-export default function PlayerView({ question, onAnswer }: PlayerViewProps) {
+export default function PlayerView({ question, onAnswer, isTimeUp }: PlayerViewProps) {
   const [choices, setChoices] = useState(() => shuffled(choicesInPosition(question)))
+
+  // Sent even if nothing was moved
+  const submit = () => onAnswer({ choice_ids: choices.map((choice) => choice.id) })
+  useAutoSubmit(isTimeUp, submit)
 
   // Each item keeps its starting colour as it moves, so it's easy to follow
   const [colorIndexes] = useState(
@@ -70,7 +75,7 @@ export default function PlayerView({ question, onAnswer }: PlayerViewProps) {
         </SortableContext>
       </DndContext>
       <button
-        onClick={() => onAnswer({ choice_ids: choices.map((choice) => choice.id) })}
+        onClick={submit}
         className="mt-2 w-full py-4 text-xl rounded font-bold bg-white text-black"
       >
         Submit
