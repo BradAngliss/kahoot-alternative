@@ -26,10 +26,14 @@ export default function Quiz({
 
   const [result, setResult] = useState<AnswerResult | null>(null)
 
-  const [hasShownChoices, setHasShownChoices] = useState(false)
-
+  // Both are stored as the question they happened on, so neither carries over
+  // to the next question before the reset below runs
+  const [choicesShownFor, setChoicesShownFor] = useState<string | null>(null)
   // Set just before time runs out, so unsubmitted answers are sent
-  const [isTimeUp, setIsTimeUp] = useState(false)
+  const [timeUpFor, setTimeUpFor] = useState<string | null>(null)
+
+  const hasShownChoices = choicesShownFor === question.id
+  const isTimeUp = timeUpFor === question.id
 
   // Stops a second submit, e.g. tapping Submit just as time runs out
   const isSubmittingRef = useRef(false)
@@ -39,19 +43,18 @@ export default function Quiz({
   useEffect(() => {
     setPlayerAnswer(null)
     setResult(null)
-    setHasShownChoices(false)
-    setIsTimeUp(false)
     isSubmittingRef.current = false
   }, [question.id])
 
   useEffect(() => {
     if (!hasShownChoices) return
+    const questionId = question.id
     const timeout = setTimeout(
-      () => setIsTimeUp(true),
+      () => setTimeUpFor(questionId),
       QUESTION_ANSWER_TIME - AUTO_SUBMIT_EARLY
     )
     return () => clearTimeout(timeout)
-  }, [hasShownChoices])
+  }, [hasShownChoices, question.id])
 
   const answer = async (response: AnswerResponse) => {
     if (isSubmittingRef.current) return
@@ -67,10 +70,11 @@ export default function Quiz({
       })
       .single()
     if (error) {
-      isSubmittingRef.current = false
       setPlayerAnswer(null)
-      // An automatic submit that arrived too late shouldn't interrupt the reveal
+      // An automatic submit that failed isn't retried (isSubmittingRef stays
+      // set), and shouldn't interrupt the reveal with an alert
       if (isTimeUp) return console.error(error.message)
+      isSubmittingRef.current = false
       return alert(error.message)
     }
 
@@ -104,7 +108,7 @@ export default function Quiz({
         <div className="flex-grow text-transparent flex justify-center">
           <CountdownCircleTimer
             onComplete={() => {
-              setHasShownChoices(true)
+              setChoicesShownFor(question.id)
             }}
             isPlaying
             duration={TIME_TIL_CHOICE_REVEAL / 1000}
