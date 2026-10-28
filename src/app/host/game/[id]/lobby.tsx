@@ -1,5 +1,6 @@
 import { Participant, supabase } from '@/types/types'
 import { useQRCode } from 'next-qrcode'
+import { useEffect, useState } from 'react'
 
 export default function Lobby({
   participants: participants,
@@ -9,6 +10,12 @@ export default function Lobby({
   gameId: string
 }) {
   const { Canvas } = useQRCode()
+
+  // window is only available in the browser, so read the origin after mount
+  const [origin, setOrigin] = useState<string | null>(null)
+  useEffect(() => {
+    setOrigin(window.location.origin)
+  }, [])
 
   const onClickStartGame = async () => {
     const { data, error } = await supabase
@@ -44,15 +51,17 @@ export default function Lobby({
         </div>
         <div className="pl-4">
           {/* <img src="/qr.png" alt="QR code" /> */}
-          <Canvas
-            text={`https://kahoot-alternative.vercel.app/game/${gameId}`}
-            options={{
-              errorCorrectionLevel: 'M',
-              margin: 3,
-              scale: 4,
-              width: 400,
-            }}
-          />
+          {origin && (
+            <Canvas
+              text={`${origin}/game/${gameId}`}
+              options={{
+                errorCorrectionLevel: 'M',
+                margin: 3,
+                scale: 4,
+                width: 400,
+              }}
+            />
+          )}
         </div>
       </div>
     </div>
