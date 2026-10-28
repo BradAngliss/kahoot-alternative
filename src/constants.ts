@@ -8,4 +8,4 @@ export const TIME_TIL_NEXT_QUESTION = 5000
  * How long before time runs out to send an answer the player hasn't submitted, in ms.
  * Leaves time for it to reach the database before the host closes answering.
  */
-export const AUTO_SUBMIT_EARLY = 1500
+export const AUTO_SUBMIT_EARLY = 500
