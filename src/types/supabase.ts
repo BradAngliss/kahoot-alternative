@@ -111,14 +111,14 @@ isOneToOne: false
                   ]
                 },"questions": {
                   Row: {
-                    "body": string,"created_at": string,"id": string,"image_url": string | null,"order": number,"quiz_set_id": string,"settings": NonNullable<Json>,"type": Database["public"]['Enums']["question_type"]
+                    "body": string,"created_at": string,"id": string,"image_url": string | null,"order": number,"quiz_set_id": string,"settings": NonNullable<Json>,"time_limit_seconds": number,"type": Database["public"]['Enums']["question_type"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "body": string,"created_at"?: string,"id"?: string,"image_url"?: string | null,"order": number,"quiz_set_id": string,"settings"?: NonNullable<Json>,"type"?: Database["public"]['Enums']["question_type"]
+                    "body": string,"created_at"?: string,"id"?: string,"image_url"?: string | null,"order": number,"quiz_set_id": string,"settings"?: NonNullable<Json>,"time_limit_seconds"?: number,"type"?: Database["public"]['Enums']["question_type"]
                   }
                   Update: {
-                    "body"?: string,"created_at"?: string,"id"?: string,"image_url"?: string | null,"order"?: number,"quiz_set_id"?: string,"settings"?: NonNullable<Json>,"type"?: Database["public"]['Enums']["question_type"]
+                    "body"?: string,"created_at"?: string,"id"?: string,"image_url"?: string | null,"order"?: number,"quiz_set_id"?: string,"settings"?: NonNullable<Json>,"time_limit_seconds"?: number,"type"?: Database["public"]['Enums']["question_type"]
                   }
                   Relationships: [
                     {
@@ -158,7 +158,7 @@ isOneToOne: false
           }
           Functions: {
             "add_question":
-{ Args: { "body": string,"choices"?: (Json)[],"order": number,"quiz_set_id": string,"settings"?: Json,"type"?: Database["public"]['Enums']["question_type"] }; Returns: undefined
+{ Args: { "body": string,"choices"?: (Json)[],"order": number,"quiz_set_id": string,"settings"?: Json,"time_limit_seconds"?: number,"type"?: Database["public"]['Enums']["question_type"] }; Returns: undefined
                            },
 "grade_answer":
 { Args: { "question": Omit<Database["public"]['Tables']["questions"]['Row'], Database["public"]['Tables']["questions"]['ComputedFields']>,"response": Json }; Returns: number

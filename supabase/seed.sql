@@ -862,13 +862,15 @@ select
     settings => '{"min": 1980, "max": 2020, "step": 1, "answer": 1996, "margin": 5}'::jsonb
   );
 
--- For ordering questions, list the choices in the correct order
+-- For ordering questions, list the choices in the correct order.
+-- time_limit_seconds is optional and defaults to 20.
 select
   add_question (
     quiz_set_id => '6f1d3c2a-8b4e-4f7a-9c5d-2e1b0a9f8c7d'::uuid,
     body => 'Put these languages in the order they were first released'::text,
     "order" => 5,
     type => 'ordering',
+    time_limit_seconds => 30,
     choices => array[
       '{"body": "C"}'::json,
       '{"body": "Python"}'::json,

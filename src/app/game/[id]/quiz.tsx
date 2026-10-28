@@ -2,11 +2,7 @@ import { CorrectIcon, IncorrectIcon } from '@/components/quiz-types/icons'
 import QuestionProgress from '@/components/quiz-types/question-progress'
 import { getQuizVariant } from '@/components/quiz-types/registry'
 import { AnswerResponse, AnswerResult } from '@/components/quiz-types/types'
-import {
-  AUTO_SUBMIT_EARLY,
-  QUESTION_ANSWER_TIME,
-  TIME_TIL_CHOICE_REVEAL,
-} from '@/constants'
+import { AUTO_SUBMIT_EARLY, TIME_TIL_CHOICE_REVEAL } from '@/constants'
 import { Question, supabase } from '@/types/types'
 import { useState, useEffect, useRef } from 'react'
 import { ColorFormat, CountdownCircleTimer } from 'react-countdown-circle-timer'
@@ -51,10 +47,10 @@ export default function Quiz({
     const questionId = question.id
     const timeout = setTimeout(
       () => setTimeUpFor(questionId),
-      QUESTION_ANSWER_TIME - AUTO_SUBMIT_EARLY
+      question.time_limit_seconds * 1000 - AUTO_SUBMIT_EARLY
     )
     return () => clearTimeout(timeout)
-  }, [hasShownChoices, question.id])
+  }, [hasShownChoices, question.id, question.time_limit_seconds])
 
   const answer = async (response: AnswerResponse) => {
     if (isSubmittingRef.current) return
