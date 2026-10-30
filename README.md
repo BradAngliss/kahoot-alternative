@@ -40,6 +40,22 @@ Access the project root at / to join as a player.
 
 Access /host to join as a host.
 
+## Admin
+
+Access /admin to create question packs. Only accounts listed in `public.admins` can use it, and the database enforces this.
+
+To set up an admin account:
+
+1. In Supabase Studio, go to Authentication and add a user with an email and password. Tick "Auto Confirm User".
+2. In the SQL editor, run:
+
+```sql
+insert into public.admins (user_id)
+  select id from auth.users where email = 'you@example.com';
+```
+
+Do the same on each environment you deploy to, since admins aren't part of the migrations or seed data.
+
 ## Generate Types
 
 `supabase gen types typescript --local --schema public > src/types/supabase.ts`

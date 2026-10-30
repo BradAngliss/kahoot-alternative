@@ -5,6 +5,19 @@ export type Database = {
   
   "public": {
           Tables: {
+            "admins": {
+                  Row: {
+                    "created_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"user_id"?: string
+                  }
+                  Relationships: []
+                }
             "answers": {
                   Row: {
                     "choice_id": string | null,"created_at": string,"id": string,"participant_id": string,"question_id": string,"response": NonNullable<Json>,"score": number
@@ -159,6 +172,15 @@ isOneToOne: false
           Functions: {
             "add_question":
 { Args: { "body": string,"choices"?: (Json)[],"order": number,"quiz_set_id": string,"settings"?: Json,"time_limit_seconds"?: number,"type"?: Database["public"]['Enums']["question_type"] }; Returns: undefined
+                           },
+"create_quiz_set":
+{ Args: { "description": string,"name": string,"questions": Json }; Returns: string
+                           },
+"delete_quiz_set":
+{ Args: { "quiz_set_id": string }; Returns: undefined
+                           },
+"is_admin":
+{ Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "grade_answer":
 { Args: { "question": Omit<Database["public"]['Tables']["questions"]['Row'], Database["public"]['Tables']["questions"]['ComputedFields']>,"response": Json }; Returns: number
