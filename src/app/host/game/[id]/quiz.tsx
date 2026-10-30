@@ -24,10 +24,6 @@ export default function Quiz({
 
   const [answers, setAnswers] = useState<Answer[]>([])
 
-  const answerStateRef = useRef<Answer[]>()
-
-  answerStateRef.current = answers
-
   const { HostView, RevealView } = getQuizVariant(question)
 
   // Seconds left before moving on automatically, while the answer is shown
@@ -99,13 +95,6 @@ export default function Quiz({
           setAnswers((currentAnswers) => {
             return [...currentAnswers, payload.new as Answer]
           })
-
-          if (
-            (answerStateRef.current?.length ?? 0) + 1 ===
-            participants.length
-          ) {
-            onTimeUp()
-          }
         }
       )
       .subscribe()
@@ -114,6 +103,18 @@ export default function Quiz({
       supabase.removeChannel(channel)
     }
   }, [question.id])
+
+  // Show the answer as soon as everyone has answered. Checked after rendering,
+  // because answers arrive in batches and can land before the count updates
+  useEffect(() => {
+    if (
+      !isAnswerRevealed &&
+      participants.length > 0 &&
+      answers.length >= participants.length
+    ) {
+      onTimeUp()
+    }
+  }, [answers.length, participants.length])
 
   // Once the answer is shown, count down and move on to the next question
   useEffect(() => {
