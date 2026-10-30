@@ -1,23 +1,56 @@
+import { QuizSet } from '@/types/types'
 import { FormEvent, useEffect, useState } from 'react'
-import { QuestionDraft, newQuestion, packProblems, toPayload } from './draft'
+import { QuestionDraft, fromQuestion, newQuestion, packProblems, toPayload } from './draft'
 import QuestionEditor from './question-editor'
 import { adminSupabase } from './supabase'
 
-export default function PackEditor({ onCreated }: { onCreated: (name: string) => void }) {
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [questions, setQuestions] = useState<QuestionDraft[]>(() => [newQuestion()])
+/** A saved pack to edit, with its games so the editor can warn about running ones. */
+export type EditablePack = QuizSet & { games: { phase: string; created_at: string }[] }
+
+const DAY = 24 * 60 * 60 * 1000
+
+const snapshot = (name: string, description: string, questions: QuestionDraft[]) =>
+  JSON.stringify([name.trim(), description.trim(), toPayload(questions)])
+
+/** Remount with a new key to start over. Creates a pack, or edits one when given it. */
+export default function PackEditor({
+  pack,
+  onSaved,
+  onCancel,
+  onDirtyChange,
+}: {
+  pack?: EditablePack
+  onSaved: (name: string) => void
+  onCancel: () => void
+  onDirtyChange: (isDirty: boolean) => void
+}) {
+  const [name, setName] = useState(pack?.name ?? '')
+  const [description, setDescription] = useState(pack?.description ?? '')
+  const [questions, setQuestions] = useState<QuestionDraft[]>(() =>
+    pack
+      ? [...pack.questions].sort((a, b) => a.order - b.order).map(fromQuestion)
+      : [newQuestion()]
+  )
   const [problems, setProblems] = useState<string[]>([])
   const [isSaving, setIsSaving] = useState(false)
+  const [initial] = useState(() => snapshot(name, description, questions))
 
   // A pack can be a lot of typing, so warn before leaving with it unsaved
-  const hasWork = name !== '' || description !== '' || questions.some((question) => question.body !== '')
+  const isDirty = snapshot(name, description, questions) !== initial
   useEffect(() => {
-    if (!hasWork) return
+    onDirtyChange(isDirty)
+    if (!isDirty) return
     const warn = (e: BeforeUnloadEvent) => e.preventDefault()
     window.addEventListener('beforeunload', warn)
     return () => window.removeEventListener('beforeunload', warn)
-  }, [hasWork])
+  }, [isDirty, onDirtyChange])
+
+  // Games are never closed if the host just leaves, so old unfinished ones don't count
+  const [now] = useState(() => Date.now())
+  const runningGames =
+    pack?.games.filter(
+      (game) => game.phase !== 'result' && now - new Date(game.created_at).getTime() < DAY
+    ).length ?? 0
 
   const save = async (e: FormEvent) => {
     e.preventDefault()
@@ -26,12 +59,16 @@ export default function PackEditor({ onCreated }: { onCreated: (name: string) =>
     setProblems(found)
     if (found.length > 0) return
 
-    setIsSaving(true)
-    const { error } = await adminSupabase.rpc('create_quiz_set', {
+    const fields = {
       name: name.trim(),
       description: description.trim(),
       questions: toPayload(questions),
-    })
+    }
+
+    setIsSaving(true)
+    const { error } = pack
+      ? await adminSupabase.rpc('update_quiz_set', { quiz_set_id: pack.id, ...fields })
+      : await adminSupabase.rpc('create_quiz_set', fields)
     setIsSaving(false)
 
     if (error) {
@@ -39,14 +76,27 @@ export default function PackEditor({ onCreated }: { onCreated: (name: string) =>
       return
     }
 
-    onCreated(name.trim())
-    setName('')
-    setDescription('')
-    setQuestions([newQuestion()])
+    onSaved(name.trim())
   }
 
   return (
     <form className="space-y-6" onSubmit={save} noValidate>
+      {pack && (
+        <div className="space-y-2 rounded-2xl border-2 border-ink bg-white p-4 text-sm">
+          <p>
+            Past scores are kept when you edit a question. Removing a question also removes its
+            points from past game results.
+          </p>
+          {runningGames > 0 && (
+            <p role="alert" className="font-bold">
+              {runningGames} {runningGames === 1 ? 'game' : 'games'} started in the last 24 hours
+              with this pack {runningGames === 1 ? "hasn't" : "haven't"} finished. Saving now could
+              disrupt {runningGames === 1 ? 'it' : 'them'} if still being played.
+            </p>
+          )}
+        </div>
+      )}
+
       <section className="card space-y-3 p-4">
         <label className="block text-sm font-semibold text-ink/70">
           Pack name
@@ -105,9 +155,16 @@ export default function PackEditor({ onCreated }: { onCreated: (name: string) =>
         </div>
       )}
 
-      <button type="submit" className="btn btn-dark w-full" disabled={isSaving}>
-        {isSaving ? 'Saving…' : 'Save pack'}
-      </button>
+      <div className="flex gap-3">
+        {pack && (
+          <button type="button" className="btn btn-primary" disabled={isSaving} onClick={onCancel}>
+            Cancel
+          </button>
+        )}
+        <button type="submit" className="btn btn-dark flex-1" disabled={isSaving}>
+          {isSaving ? 'Saving…' : pack ? 'Save changes' : 'Save pack'}
+        </button>
+      </div>
     </form>
   )
 }

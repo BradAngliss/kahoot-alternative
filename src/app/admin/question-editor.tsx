@@ -22,13 +22,13 @@ function ChoicesEditor({
 }) {
   const { type, choices } = question
   const isFixed = type === 'true_false'
-  const isSingleCorrect = type === 'multiple_choice' || type === 'true_false'
-  const hasCorrect = isSingleCorrect || type === 'multi_select'
+  const isSingleCorrect = type === 'true_false'
+  const hasCorrect = isSingleCorrect || type === 'multiple_choice' || type === 'multi_select'
 
   const setChoices = (next: QuestionDraft['choices']) => onChange({ ...question, choices: next })
 
   const hint = {
-    multiple_choice: 'Mark the one correct choice.',
+    multiple_choice: 'Mark the correct choice. Players pick one, and any choice you mark scores.',
     true_false: 'Mark the correct answer.',
     multi_select: 'Mark every correct choice. Players must pick exactly these to score.',
     ordering: 'List these in the correct order. Players see them shuffled.',

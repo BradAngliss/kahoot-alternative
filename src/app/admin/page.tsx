@@ -3,7 +3,7 @@
 import Wordmark from '@/components/wordmark'
 import Link from 'next/link'
 import { FormEvent, useCallback, useEffect, useState } from 'react'
-import PackEditor from './pack-editor'
+import PackEditor, { EditablePack } from './pack-editor'
 import { adminSupabase } from './supabase'
 
 /**
@@ -20,7 +20,17 @@ type PackSummary = {
   games: { count: number }[]
 }
 
-function PackRow({ pack, onDeleted }: { pack: PackSummary; onDeleted: () => void }) {
+function PackRow({
+  pack,
+  isEditing,
+  onEdit,
+  onDeleted,
+}: {
+  pack: PackSummary
+  isEditing: boolean
+  onEdit: () => void
+  onDeleted: () => void
+}) {
   const [isConfirming, setIsConfirming] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -73,13 +83,23 @@ function PackRow({ pack, onDeleted }: { pack: PackSummary; onDeleted: () => void
           </div>
         </div>
       ) : (
-        <button
-          className="mt-2 rounded-lg border-2 border-ink/20 px-2 py-1 text-sm font-semibold text-ink/70 hover:border-ink hover:text-ink"
-          aria-label={`Delete ${pack.name}`}
-          onClick={() => setIsConfirming(true)}
-        >
-          Delete
-        </button>
+        <div className="flex gap-2 pt-2">
+          <button
+            className="rounded-lg border-2 border-ink/20 px-2 py-1 text-sm font-semibold text-ink/70 hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label={`Edit ${pack.name}`}
+            disabled={isEditing}
+            onClick={onEdit}
+          >
+            {isEditing ? 'Editing' : 'Edit'}
+          </button>
+          <button
+            className="rounded-lg border-2 border-ink/20 px-2 py-1 text-sm font-semibold text-ink/70 hover:border-ink hover:text-ink"
+            aria-label={`Delete ${pack.name}`}
+            onClick={() => setIsConfirming(true)}
+          >
+            Delete
+          </button>
+        </div>
       )}
       {error && (
         <p role="alert" className="pt-2 text-sm font-semibold text-choice-red">
@@ -146,6 +166,10 @@ function Packs() {
   const [packs, setPacks] = useState<PackSummary[]>()
   const [loadError, setLoadError] = useState<string | null>(null)
   const [created, setCreated] = useState<string | null>(null)
+  const [editing, setEditing] = useState<EditablePack | null>(null)
+  // Changing this starts a new pack form
+  const [editorCount, setEditorCount] = useState(0)
+  const [isDirty, setIsDirty] = useState(false)
 
   const loadPacks = useCallback(async () => {
     const { data, error } = await adminSupabase
@@ -166,11 +190,44 @@ function Packs() {
     loadPacks()
   }, [loadPacks])
 
+  const canDiscard = () => !isDirty || window.confirm('Discard your unsaved changes?')
+
+  /** Show an empty new pack form */
+  const closeEditor = () => {
+    setEditing(null)
+    setEditorCount((count) => count + 1)
+    setIsDirty(false)
+  }
+
+  const editPack = async (id: string) => {
+    if (!canDiscard()) return
+    const { data, error } = await adminSupabase
+      .from('quiz_sets')
+      .select('*, questions(*, choices(*)), games(phase, created_at)')
+      .eq('id', id)
+      .single()
+    if (error) {
+      setLoadError(error.message)
+      return
+    }
+    setLoadError(null)
+    setCreated(null)
+    setIsDirty(false)
+    setEditing(data as unknown as EditablePack)
+    window.scrollTo({ top: 0 })
+  }
+
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[1fr_20rem]">
       <div>
-        <h1 className="pb-1 font-display text-4xl font-extrabold">New question pack</h1>
-        <p className="pb-6 text-ink/70">Saved packs show up on the host dashboard straight away.</p>
+        <h1 className="pb-1 font-display text-4xl font-extrabold">
+          {editing ? `Edit “${editing.name}”` : 'New question pack'}
+        </h1>
+        <p className="pb-6 text-ink/70">
+          {editing
+            ? 'Changes apply to new games. Use the arrows on each question to change the order.'
+            : 'Saved packs show up on the host dashboard straight away.'}
+        </p>
         {created && (
           <p role="status" className="mb-6 rounded-2xl border-2 border-ink bg-choice-green/30 p-4 font-semibold">
             “{created}” saved.{' '}
@@ -180,7 +237,14 @@ function Packs() {
           </p>
         )}
         <PackEditor
-          onCreated={(name) => {
+          key={editing ? editing.id : `new-${editorCount}`}
+          pack={editing ?? undefined}
+          onDirtyChange={setIsDirty}
+          onCancel={() => {
+            if (canDiscard()) closeEditor()
+          }}
+          onSaved={(name) => {
+            closeEditor()
             setCreated(name)
             window.scrollTo({ top: 0 })
             loadPacks()
@@ -199,9 +263,12 @@ function Packs() {
             <PackRow
               key={pack.id}
               pack={pack}
+              isEditing={editing?.id === pack.id}
+              onEdit={() => editPack(pack.id)}
               onDeleted={() => {
                 // The saved message may link to the pack that was just deleted
                 setCreated(null)
+                if (editing?.id === pack.id) closeEditor()
                 loadPacks()
               }}
             />

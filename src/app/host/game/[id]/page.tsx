@@ -53,6 +53,10 @@ export default function Home({
           ascending: true,
           referencedTable: 'questions',
         })
+        .order('position', {
+          ascending: true,
+          referencedTable: 'questions.choices',
+        })
         .single()
       if (error) {
         console.error(error.message)

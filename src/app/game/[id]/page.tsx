@@ -57,6 +57,7 @@ export default function Home({
       .select(`*, choices(*)`)
       .eq('quiz_set_id', quizSetId)
       .order('order', { ascending: true })
+      .order('position', { ascending: true, referencedTable: 'choices' })
     if (error) {
       getQuestions(quizSetId)
       return

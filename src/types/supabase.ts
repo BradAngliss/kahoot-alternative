@@ -185,6 +185,9 @@ isOneToOne: false
 "grade_answer":
 { Args: { "question": Omit<Database["public"]['Tables']["questions"]['Row'], Database["public"]['Tables']["questions"]['ComputedFields']>,"response": Json }; Returns: number
                            },
+"update_quiz_set":
+{ Args: { "description": string,"name": string,"questions": Json,"quiz_set_id": string }; Returns: undefined
+                           },
 "submit_answer":
 { Args: { "participant_id": string,"question_id": string,"response": Json }; Returns: {
               "correctness": number,"is_correct": boolean,"score": number

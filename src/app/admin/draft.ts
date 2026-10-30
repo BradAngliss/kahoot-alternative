@@ -1,14 +1,21 @@
+import {
+  choicesInPosition,
+  sliderSettings as savedSliderSettings,
+  typeAnswerSettings,
+} from '@/components/quiz-types/json'
 import { QUESTION_TYPE_LABELS, QuestionType } from '@/components/quiz-types/registry'
 import { Json } from '@/types/supabase'
+import { Question } from '@/types/types'
 
 export const MAX_CHOICES = 6
 
-/** Form state for a choice. key is only for React. */
-export type ChoiceDraft = { key: string; body: string; isCorrect: boolean }
+/** Form state for a choice. key is only for React. id is set once it's saved. */
+export type ChoiceDraft = { key: string; id?: string; body: string; isCorrect: boolean }
 
-/** Form state for a question. Numbers stay strings until the pack is saved. */
+/** Form state for a question. Numbers stay strings until the pack is saved. id is set once it's saved. */
 export type QuestionDraft = {
   key: string
+  id?: string
   type: QuestionType
   body: string
   timeLimit: string
@@ -50,9 +57,10 @@ const choicesForType = (type: QuestionType, choices: ChoiceDraft[]): ChoiceDraft
     return kept.map((choice) => ({ ...choice, isCorrect: false }))
   }
   if (type === 'multiple_choice') {
-    // Exactly one correct: keep the first
-    const correct = Math.max(kept.findIndex((choice) => choice.isCorrect), 0)
-    return kept.map((choice, index) => ({ ...choice, isCorrect: index === correct }))
+    // Needs one correct choice to start with
+    return kept.some((choice) => choice.isCorrect)
+      ? kept
+      : kept.map((choice, index) => ({ ...choice, isCorrect: index === 0 }))
   }
   return kept
 }
@@ -71,6 +79,30 @@ export const newQuestion = (type: QuestionType = 'multiple_choice'): QuestionDra
   margin: '',
   unit: '',
 })
+
+/** Form state for a question that's already saved. */
+export const fromQuestion = (question: Question): QuestionDraft => {
+  const slider = savedSliderSettings(question)
+  return {
+    ...newQuestion(question.type),
+    id: question.id,
+    body: question.body,
+    timeLimit: String(question.time_limit_seconds),
+    choices: choicesInPosition(question).map((choice) => ({
+      ...newChoice(choice.body, choice.is_correct),
+      id: choice.id,
+    })),
+    acceptedAnswers: typeAnswerSettings(question).accepted_answers.join('\n'),
+    ...(question.type === 'slider' && {
+      min: String(slider.min),
+      max: String(slider.max),
+      step: String(slider.step ?? 1),
+      answer: String(slider.answer),
+      margin: slider.margin === undefined ? '' : String(slider.margin),
+      unit: slider.unit ?? '',
+    }),
+  }
+}
 
 export const changeType = (question: QuestionDraft, type: QuestionType): QuestionDraft => ({
   ...question,
@@ -115,10 +147,10 @@ const choiceProblems = (question: QuestionDraft): string[] => {
   if (question.choices.some((choice) => !choice.body.trim())) problems.push('has an empty choice')
 
   const correct = question.choices.filter((choice) => choice.isCorrect).length
-  if (['multiple_choice', 'true_false'].includes(question.type) && correct !== 1) {
+  if (question.type === 'true_false' && correct !== 1) {
     problems.push('needs exactly one correct choice')
   }
-  if (question.type === 'multi_select' && correct === 0) {
+  if (['multiple_choice', 'multi_select'].includes(question.type) && correct === 0) {
     problems.push('needs at least one correct choice')
   }
   return problems
@@ -160,9 +192,10 @@ const sliderSettings = (question: QuestionDraft) => ({
   ...(question.unit.trim() !== '' && { unit: question.unit.trim() }),
 })
 
-/** The questions argument for create_quiz_set. */
+/** The questions argument for create_quiz_set and update_quiz_set. */
 export const toPayload = (questions: QuestionDraft[]): Json =>
   questions.map((question) => ({
+    ...(question.id && { id: question.id }),
     body: question.body.trim(),
     type: question.type,
     time_limit_seconds: Number(question.timeLimit),
@@ -173,6 +206,7 @@ export const toPayload = (questions: QuestionDraft[]): Json =>
           ? { accepted_answers: acceptedAnswers(question) }
           : {},
     choices: question.choices.map((choice) => ({
+      ...(choice.id && { id: choice.id }),
       body: choice.body.trim(),
       is_correct: choice.isCorrect,
     })),
