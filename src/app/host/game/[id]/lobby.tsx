@@ -1,4 +1,4 @@
-import { choiceColor } from '@/components/quiz-types/colors'
+import PlayerName from '@/components/player-name'
 import Wordmark from '@/components/wordmark'
 import { Participant, supabase } from '@/types/types'
 import { useQRCode } from 'next-qrcode'
@@ -82,14 +82,11 @@ export default function Lobby({
               <p className="m-auto text-lg text-white/60">Waiting for players…</p>
             )}
             {participants.map((participant, index) => (
-              <div
-                className={`animate-pop-in rounded-xl border-2 border-ink px-4 py-2 font-display text-xl font-bold text-ink shadow-chunky ${choiceColor(
-                  index % 4
-                )}`}
+              <PlayerName
                 key={participant.id}
-              >
-                {participant.nickname}
-              </div>
+                nickname={participant.nickname}
+                joinIndex={index}
+              />
             ))}
           </div>
         </div>

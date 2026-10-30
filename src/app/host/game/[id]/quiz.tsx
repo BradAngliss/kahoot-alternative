@@ -1,3 +1,4 @@
+import PlayerName from '@/components/player-name'
 import QuestionCard from '@/components/quiz-types/question-card'
 import QuestionProgress from '@/components/quiz-types/question-progress'
 import { getQuizVariant } from '@/components/quiz-types/registry'
@@ -189,6 +190,30 @@ export default function Quiz({
 
       {hasShownChoices && (
         <HostView question={question} isAnswerRevealed={isAnswerRevealed} />
+      )}
+
+      {hasShownChoices && !isAnswerRevealed && (
+        <div
+          aria-label="Players who have answered"
+          className="flex min-h-[5rem] flex-wrap content-start gap-3 rounded-2xl border-2 border-white/20 bg-white/5 p-4"
+        >
+          {answers.length === 0 && (
+            <p className="m-auto text-lg text-white/60">Waiting for answers…</p>
+          )}
+          {answers.map((answer) => {
+            const joinIndex = participants.findIndex(
+              (participant) => participant.id === answer.participant_id
+            )
+            if (joinIndex === -1) return null
+            return (
+              <PlayerName
+                key={answer.id}
+                nickname={participants[joinIndex].nickname}
+                joinIndex={joinIndex}
+              />
+            )
+          })}
+        </div>
       )}
     </div>
   )
