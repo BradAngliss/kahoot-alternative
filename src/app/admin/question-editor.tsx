@@ -1,6 +1,8 @@
 import { choiceColor, choiceLetter } from '@/components/quiz-types/colors'
 import { QUESTION_TYPE_LABELS, QuestionType } from '@/components/quiz-types/registry'
+import { useState } from 'react'
 import { MAX_CHOICES, QuestionDraft, changeType, newChoice } from './draft'
+import { IMAGE_TYPES, MAX_IMAGE_BYTES } from './images'
 
 const FIELD = 'input py-2 text-base shadow-none'
 const LABEL = 'block text-sm font-semibold text-ink/70'
@@ -180,6 +182,68 @@ function SliderEditor({
   )
 }
 
+function ImageEditor({
+  question,
+  onChange,
+}: {
+  question: QuestionDraft
+  onChange: (question: QuestionDraft) => void
+}) {
+  const [error, setError] = useState<string | null>(null)
+
+  const pickImage = (file: File | undefined) => {
+    if (!file) return
+    if (!IMAGE_TYPES.includes(file.type)) {
+      setError('Pick a JPEG, PNG, WebP or GIF image.')
+    } else if (file.size > MAX_IMAGE_BYTES) {
+      setError('Pick an image of 5 MB or less.')
+    } else {
+      setError(null)
+      onChange({ ...question, imageFile: file, imageUrl: URL.createObjectURL(file) })
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <label className={LABEL}>
+        Image (optional, shown on the host&apos;s screen)
+        <input
+          type="file"
+          accept={IMAGE_TYPES.join(',')}
+          className="mt-1 block w-full text-sm font-normal text-ink"
+          // Cleared so picking the same file again after removing it still counts
+          onChange={(e) => {
+            pickImage(e.target.files?.[0])
+            e.target.value = ''
+          }}
+        />
+      </label>
+      {error && (
+        <p role="alert" className="text-sm font-semibold text-choice-red">
+          {error}
+        </p>
+      )}
+      {question.imageUrl && (
+        <div className="flex items-end gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={question.imageUrl}
+            alt="Preview of the chosen image"
+            className="h-24 max-w-[12rem] rounded-lg border-2 border-ink object-contain"
+          />
+          <button
+            type="button"
+            className={SMALL_BUTTON}
+            onClick={() => onChange({ ...question, imageFile: null, imageUrl: null })}
+          >
+            Remove image
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function QuestionEditor({
   question,
   index,
@@ -261,6 +325,8 @@ export default function QuestionEditor({
           onChange={(e) => onChange({ ...question, body: e.target.value })}
         />
       </label>
+
+      <ImageEditor question={question} onChange={onChange} />
 
       {question.type === 'slider' ? (
         <SliderEditor question={question} onChange={onChange} />

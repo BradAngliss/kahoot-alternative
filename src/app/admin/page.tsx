@@ -3,6 +3,7 @@
 import Wordmark from '@/components/wordmark'
 import Link from 'next/link'
 import { FormEvent, useCallback, useEffect, useState } from 'react'
+import { removeImages } from './images'
 import PackEditor, { EditablePack } from './pack-editor'
 import { adminSupabase } from './supabase'
 
@@ -40,12 +41,19 @@ function PackRow({
   const deletePack = async () => {
     setIsDeleting(true)
     setError(null)
+    // Read first, because the questions are gone afterwards
+    const { data: questions } = await adminSupabase
+      .from('questions')
+      .select('image_url')
+      .eq('quiz_set_id', pack.id)
     const { error } = await adminSupabase.rpc('delete_quiz_set', { quiz_set_id: pack.id })
-    setIsDeleting(false)
     if (error) {
+      setIsDeleting(false)
       setError(error.message)
       return
     }
+    await removeImages((questions ?? []).flatMap(({ image_url }) => image_url ?? []))
+    setIsDeleting(false)
     onDeleted()
   }
 

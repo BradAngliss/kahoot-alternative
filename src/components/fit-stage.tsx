@@ -1,7 +1,7 @@
 import { ReactNode, useRef } from 'react'
 import useIsomorphicLayoutEffect from 'react-use/lib/useIsomorphicLayoutEffect'
 
-const MIN_FONT_SIZE = 10
+const MIN_FONT_SIZE = 8
 const SMALLEST_BASE_FONT_SIZE = 16
 const LARGEST_BASE_FONT_SIZE = 32
 

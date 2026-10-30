@@ -1,6 +1,7 @@
 import { QuizSet } from '@/types/types'
 import { FormEvent, useEffect, useState } from 'react'
 import { QuestionDraft, fromQuestion, newQuestion, packProblems, toPayload } from './draft'
+import { removeImages, uploadImage } from './images'
 import QuestionEditor from './question-editor'
 import { adminSupabase } from './supabase'
 
@@ -59,23 +60,55 @@ export default function PackEditor({
     setProblems(found)
     if (found.length > 0) return
 
+    setIsSaving(true)
+
+    // Uploaded only now, so abandoning the form leaves no unused files behind
+    const uploads = await Promise.allSettled(
+      questions.map((question) => (question.imageFile ? uploadImage(question.imageFile) : null))
+    )
+    const uploaded = uploads.flatMap((upload) =>
+      upload.status === 'fulfilled' && upload.value ? [upload.value] : []
+    )
+    if (uploads.some((upload) => upload.status === 'rejected')) {
+      await removeImages(uploaded)
+      setIsSaving(false)
+      setProblems(["Couldn't upload an image. Check your connection and try again"])
+      return
+    }
+
+    const saved = questions.map((question, index) => {
+      const upload = uploads[index]
+      return upload.status === 'fulfilled' && upload.value
+        ? { ...question, imageUrl: upload.value }
+        : question
+    })
+
     const fields = {
       name: name.trim(),
       description: description.trim(),
-      questions: toPayload(questions),
+      questions: toPayload(saved),
     }
 
-    setIsSaving(true)
     const { error } = pack
       ? await adminSupabase.rpc('update_quiz_set', { quiz_set_id: pack.id, ...fields })
       : await adminSupabase.rpc('create_quiz_set', fields)
-    setIsSaving(false)
 
     if (error) {
+      await removeImages(uploaded)
+      setIsSaving(false)
       setProblems([error.message])
       return
     }
 
+    // Pictures that were replaced or removed, or whose question was
+    const kept = saved.map((question) => question.imageUrl)
+    await removeImages(
+      (pack?.questions ?? []).flatMap((question) =>
+        question.image_url && !kept.includes(question.image_url) ? [question.image_url] : []
+      )
+    )
+
+    setIsSaving(false)
     onSaved(name.trim())
   }
 

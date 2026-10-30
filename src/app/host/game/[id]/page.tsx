@@ -65,6 +65,11 @@ export default function Home({
         return
       }
       setQuizSet(data)
+
+      // Load the pictures now, so they don't appear late in front of the room
+      data.questions.forEach(({ image_url }) => {
+        if (image_url) new Image().src = image_url
+      })
     }
 
     // A new name each time, because supabase.channel returns any channel with the

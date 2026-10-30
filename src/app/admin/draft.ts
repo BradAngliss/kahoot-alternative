@@ -19,6 +19,10 @@ export type QuestionDraft = {
   type: QuestionType
   body: string
   timeLimit: string
+  /** The saved picture, or a local preview of imageFile */
+  imageUrl: string | null
+  /** A picture to upload when the pack is saved */
+  imageFile: File | null
   choices: ChoiceDraft[]
   /** type_answer: one accepted answer per line */
   acceptedAnswers: string
@@ -70,6 +74,8 @@ export const newQuestion = (type: QuestionType = 'multiple_choice'): QuestionDra
   type,
   body: '',
   timeLimit: '20',
+  imageUrl: null,
+  imageFile: null,
   choices: choicesForType(type, []),
   acceptedAnswers: '',
   min: '0',
@@ -88,6 +94,7 @@ export const fromQuestion = (question: Question): QuestionDraft => {
     id: question.id,
     body: question.body,
     timeLimit: String(question.time_limit_seconds),
+    imageUrl: question.image_url,
     choices: choicesInPosition(question).map((choice) => ({
       ...newChoice(choice.body, choice.is_correct),
       id: choice.id,
@@ -199,6 +206,7 @@ export const toPayload = (questions: QuestionDraft[]): Json =>
     body: question.body.trim(),
     type: question.type,
     time_limit_seconds: Number(question.timeLimit),
+    image_url: question.imageUrl,
     settings:
       question.type === 'slider'
         ? sliderSettings(question)

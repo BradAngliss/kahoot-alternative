@@ -1,5 +1,6 @@
 import PlayerNames from '@/components/player-names'
 import QuestionCard from '@/components/quiz-types/question-card'
+import QuestionImage from '@/components/quiz-types/question-image'
 import QuestionProgress from '@/components/quiz-types/question-progress'
 import { getQuizVariant } from '@/components/quiz-types/registry'
 import { TIME_TIL_CHOICE_REVEAL, TIME_TIL_NEXT_QUESTION } from '@/constants'
@@ -152,87 +153,96 @@ export default function Quiz({
 
       <QuestionCard body={question.body} size="lg" />
 
-      {!hasShownChoices && (
-        <div className="flex flex-grow flex-col items-center justify-center gap-4 font-display">
-          <div className="stage-timer text-5xl font-extrabold">
-            <CountdownCircleTimer
-              key={question.id}
-              isPlaying
-              duration={TIME_TIL_CHOICE_REVEAL / 1000}
-              colors={['#ffc93c', '#ffc93c', '#ffc93c', '#ffc93c']}
-              colorsTime={[7, 5, 2, 0]}
-              trailColor={'rgba(255,255,255,0.2)' as ColorFormat}
-              strokeWidth={12}
-              size={140}
-            >
-              {({ remainingTime }) => remainingTime}
-            </CountdownCircleTimer>
-          </div>
-          <p className="text-3xl font-bold text-white/80">Get ready…</p>
-        </div>
-      )}
-
-      {/* Half of the spare space, shared with the choices below. Names never add
-          to it. A narrow window puts them under the timer, where they have room. */}
-      {hasShownChoices && !isAnswerRevealed && (
-        <div className="flex min-h-[16rem] flex-1 flex-col gap-4 md:min-h-[8.75rem] md:flex-row md:gap-6">
-          <div className="flex shrink-0 items-center gap-6 font-display">
-            <div className="stage-timer text-5xl font-extrabold">
-              <CountdownCircleTimer
-                onComplete={() => {
-                  onTimeUp()
-                }}
-                isPlaying
-                duration={question.time_limit_seconds}
-                colors={['#ffffff', '#ffc93c', '#ff5c7a', '#ff5c7a']}
-                colorsTime={[7, 5, 2, 0]}
-                trailColor={'rgba(255,255,255,0.2)' as ColorFormat}
-                strokeWidth={12}
-                size={140}
-              >
-                {({ remainingTime }) => remainingTime}
-              </CountdownCircleTimer>
+      <div
+        className={`flex flex-grow flex-col gap-4 ${
+          question.image_url ? 'lg:landscape:flex-row' : ''
+        }`}
+      >
+        {question.image_url && <QuestionImage url={question.image_url} />}
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          {!hasShownChoices && (
+            <div className="flex flex-grow flex-col items-center justify-center gap-4 font-display">
+              <div className="stage-timer text-5xl font-extrabold">
+                <CountdownCircleTimer
+                  key={question.id}
+                  isPlaying
+                  duration={TIME_TIL_CHOICE_REVEAL / 1000}
+                  colors={['#ffc93c', '#ffc93c', '#ffc93c', '#ffc93c']}
+                  colorsTime={[7, 5, 2, 0]}
+                  trailColor={'rgba(255,255,255,0.2)' as ColorFormat}
+                  strokeWidth={12}
+                  size={140}
+                >
+                  {({ remainingTime }) => remainingTime}
+                </CountdownCircleTimer>
+              </div>
+              <p className="text-3xl font-bold text-white/80">Get ready…</p>
             </div>
-            <div className="text-center">
-              <div className="text-6xl font-extrabold tabular-nums">{answers.length}</div>
-              <div className="text-xl font-semibold text-white/80">
-                of {participants.length} answered
+          )}
+
+          {/* Half of the spare space, shared with the choices below. Names never add
+              to it. A narrow window puts them under the timer, where they have room. */}
+          {hasShownChoices && !isAnswerRevealed && (
+            <div className="flex min-h-[16rem] flex-1 flex-col gap-4 md:min-h-[8.75rem] md:flex-row md:gap-6">
+              <div className="flex shrink-0 items-center gap-6 font-display">
+                <div className="stage-timer text-5xl font-extrabold">
+                  <CountdownCircleTimer
+                    onComplete={() => {
+                      onTimeUp()
+                    }}
+                    isPlaying
+                    duration={question.time_limit_seconds}
+                    colors={['#ffffff', '#ffc93c', '#ff5c7a', '#ff5c7a']}
+                    colorsTime={[7, 5, 2, 0]}
+                    trailColor={'rgba(255,255,255,0.2)' as ColorFormat}
+                    strokeWidth={12}
+                    size={140}
+                  >
+                    {({ remainingTime }) => remainingTime}
+                  </CountdownCircleTimer>
+                </div>
+                <div className="text-center">
+                  <div className="text-6xl font-extrabold tabular-nums">{answers.length}</div>
+                  <div className="text-xl font-semibold text-white/80">
+                    of {participants.length} answered
+                  </div>
+                </div>
+              </div>
+              <div className="min-h-0 min-w-0 flex-grow">
+                <PlayerNames
+                  label="Players who have answered"
+                  emptyText="Waiting for answers…"
+                  players={answers.flatMap((answer) => {
+                    const joinIndex = participants.findIndex(
+                      (participant) => participant.id === answer.participant_id
+                    )
+                    if (joinIndex === -1) return []
+                    return [
+                      {
+                        id: answer.id,
+                        nickname: participants[joinIndex].nickname,
+                        joinIndex,
+                      },
+                    ]
+                  })}
+                />
               </div>
             </div>
-          </div>
-          <div className="min-h-0 min-w-0 flex-grow">
-            <PlayerNames
-              label="Players who have answered"
-              emptyText="Waiting for answers…"
-              players={answers.flatMap((answer) => {
-                const joinIndex = participants.findIndex(
-                  (participant) => participant.id === answer.participant_id
-                )
-                if (joinIndex === -1) return []
-                return [
-                  {
-                    id: answer.id,
-                    nickname: participants[joinIndex].nickname,
-                    joinIndex,
-                  },
-                ]
-              })}
-            />
-          </div>
-        </div>
-      )}
+          )}
 
-      {isAnswerRevealed && (
-        <div className="flex flex-1 flex-col justify-center">
-          <RevealView question={question} answers={answers} />
-        </div>
-      )}
+          {isAnswerRevealed && (
+            <div className="flex flex-1 flex-col justify-center">
+              <RevealView question={question} answers={answers} />
+            </div>
+          )}
 
-      {hasShownChoices && (
-        <div className="flex flex-1 flex-col justify-center">
-          <HostView question={question} isAnswerRevealed={isAnswerRevealed} />
+          {hasShownChoices && (
+            <div className="flex flex-1 flex-col justify-center">
+              <HostView question={question} isAnswerRevealed={isAnswerRevealed} />
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }
