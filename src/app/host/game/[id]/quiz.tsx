@@ -1,4 +1,4 @@
-import PlayerName from '@/components/player-name'
+import PlayerNames from '@/components/player-names'
 import QuestionCard from '@/components/quiz-types/question-card'
 import QuestionProgress from '@/components/quiz-types/question-progress'
 import { getQuizVariant } from '@/components/quiz-types/registry'
@@ -138,7 +138,7 @@ export default function Quiz({
   }, [isAnswerRevealed, question.id])
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-6 py-6">
+    <div className="stage-screen mx-auto max-w-[max(90vw,1152px)] px-6 pt-4">
       <div className="flex items-center gap-4">
         <div className="flex-grow">
           <QuestionProgress question={question} questionCount={questionCount} />
@@ -152,15 +152,32 @@ export default function Quiz({
 
       <QuestionCard body={question.body} size="lg" />
 
-      <div className="flex flex-grow flex-col justify-center">
-        {!hasShownChoices && (
-          <p className="text-center font-display text-2xl font-bold text-white/80">
-            Get ready…
-          </p>
-        )}
-        {hasShownChoices && !isAnswerRevealed && (
-          <div className="flex items-center justify-center gap-16 font-display">
-            <div className="text-6xl font-extrabold">
+      {!hasShownChoices && (
+        <div className="flex flex-grow flex-col items-center justify-center gap-4 font-display">
+          <div className="stage-timer text-5xl font-extrabold">
+            <CountdownCircleTimer
+              key={question.id}
+              isPlaying
+              duration={TIME_TIL_CHOICE_REVEAL / 1000}
+              colors={['#ffc93c', '#ffc93c', '#ffc93c', '#ffc93c']}
+              colorsTime={[7, 5, 2, 0]}
+              trailColor={'rgba(255,255,255,0.2)' as ColorFormat}
+              strokeWidth={12}
+              size={140}
+            >
+              {({ remainingTime }) => remainingTime}
+            </CountdownCircleTimer>
+          </div>
+          <p className="text-3xl font-bold text-white/80">Get ready…</p>
+        </div>
+      )}
+
+      {/* Half of the spare space, shared with the choices below. Names never add
+          to it. A narrow window puts them under the timer, where they have room. */}
+      {hasShownChoices && !isAnswerRevealed && (
+        <div className="flex min-h-[16rem] flex-1 flex-col gap-4 md:min-h-[8.75rem] md:flex-row md:gap-6">
+          <div className="flex shrink-0 items-center gap-6 font-display">
+            <div className="stage-timer text-5xl font-extrabold">
               <CountdownCircleTimer
                 onComplete={() => {
                   onTimeUp()
@@ -171,49 +188,49 @@ export default function Quiz({
                 colorsTime={[7, 5, 2, 0]}
                 trailColor={'rgba(255,255,255,0.2)' as ColorFormat}
                 strokeWidth={12}
-                size={180}
+                size={140}
               >
                 {({ remainingTime }) => remainingTime}
               </CountdownCircleTimer>
             </div>
             <div className="text-center">
-              <div className="text-7xl font-extrabold tabular-nums">{answers.length}</div>
-              <div className="text-2xl font-semibold text-white/80">
+              <div className="text-6xl font-extrabold tabular-nums">{answers.length}</div>
+              <div className="text-xl font-semibold text-white/80">
                 of {participants.length} answered
               </div>
             </div>
           </div>
-        )}
-        {isAnswerRevealed && (
-          <RevealView question={question} answers={answers} />
-        )}
-      </div>
-
-      {hasShownChoices && (
-        <HostView question={question} isAnswerRevealed={isAnswerRevealed} />
+          <div className="min-h-0 min-w-0 flex-grow">
+            <PlayerNames
+              label="Players who have answered"
+              emptyText="Waiting for answers…"
+              players={answers.flatMap((answer) => {
+                const joinIndex = participants.findIndex(
+                  (participant) => participant.id === answer.participant_id
+                )
+                if (joinIndex === -1) return []
+                return [
+                  {
+                    id: answer.id,
+                    nickname: participants[joinIndex].nickname,
+                    joinIndex,
+                  },
+                ]
+              })}
+            />
+          </div>
+        </div>
       )}
 
-      {hasShownChoices && !isAnswerRevealed && (
-        <div
-          aria-label="Players who have answered"
-          className="flex min-h-[5rem] flex-wrap content-start gap-3 rounded-2xl border-2 border-white/20 bg-white/5 p-4"
-        >
-          {answers.length === 0 && (
-            <p className="m-auto text-lg text-white/60">Waiting for answers…</p>
-          )}
-          {answers.map((answer) => {
-            const joinIndex = participants.findIndex(
-              (participant) => participant.id === answer.participant_id
-            )
-            if (joinIndex === -1) return null
-            return (
-              <PlayerName
-                key={answer.id}
-                nickname={participants[joinIndex].nickname}
-                joinIndex={joinIndex}
-              />
-            )
-          })}
+      {isAnswerRevealed && (
+        <div className="flex flex-1 flex-col justify-center">
+          <RevealView question={question} answers={answers} />
+        </div>
+      )}
+
+      {hasShownChoices && (
+        <div className="flex flex-1 flex-col justify-center">
+          <HostView question={question} isAnswerRevealed={isAnswerRevealed} />
         </div>
       )}
     </div>

@@ -86,7 +86,7 @@ export default function Quiz({
   const isClose = !!result && !result.isCorrect && result.correctness > 0
 
   return (
-    <div className="flex min-h-screen flex-col gap-6 px-4 py-6">
+    <div className="stage-screen px-4 pt-4">
       <QuestionProgress question={question} questionCount={questionCount} />
 
       <QuestionCard body={question.body} />
@@ -101,7 +101,7 @@ export default function Quiz({
       )}
 
       {!hasShownChoices && !isAnswerRevealed && (
-        <div className="flex flex-grow items-center justify-center font-display text-5xl font-extrabold">
+        <div className="stage-timer flex flex-grow items-center justify-center font-display text-5xl font-extrabold">
           <CountdownCircleTimer
             onComplete={() => {
               setChoicesShownFor(question.id)
@@ -112,7 +112,7 @@ export default function Quiz({
             trailColor={'rgba(255,255,255,0.2)' as ColorFormat}
             colorsTime={[7, 5, 2, 0]}
             strokeWidth={10}
-            size={160}
+            size={140}
           >
             {({ remainingTime }) => remainingTime}
           </CountdownCircleTimer>
@@ -120,7 +120,7 @@ export default function Quiz({
       )}
 
       {hasShownChoices && !isAnswerRevealed && !playerAnswer && (
-        <div className="flex flex-grow flex-col justify-end">
+        <div className="flex flex-grow flex-col justify-center">
           <PlayerView question={question} onAnswer={answer} isTimeUp={isTimeUp} />
         </div>
       )}

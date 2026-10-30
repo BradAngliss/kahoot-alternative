@@ -1,4 +1,4 @@
-import PlayerName from '@/components/player-name'
+import PlayerNames from '@/components/player-names'
 import Wordmark from '@/components/wordmark'
 import { Participant, supabase } from '@/types/types'
 import { useQRCode } from 'next-qrcode'
@@ -32,13 +32,13 @@ export default function Lobby({
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-6 py-8">
+    <div className="stage-screen mx-auto max-w-[max(90vw,1152px)] px-6 pt-4">
       <Wordmark />
-      <div className="grid flex-grow items-center gap-8 lg:grid-cols-[auto_1fr]">
-        <div className="card flex flex-col items-center p-6 text-center">
+      <div className="grid min-h-0 flex-grow grid-rows-[auto_minmax(6rem,1fr)] gap-6 landscape:grid-cols-[auto_1fr] landscape:grid-rows-[minmax(0,1fr)]">
+        <div className="card flex flex-col items-center justify-center p-6 text-center">
           <h1 className="font-display text-3xl font-extrabold">Join on your phone</h1>
           <p className="pb-4 text-ink/70">Scan the code with your camera</p>
-          <div className="overflow-hidden rounded-xl border-2 border-ink">
+          <div className="overflow-hidden rounded-xl border-2 border-ink [&_canvas]:!h-[min(20rem,25vh)] [&_canvas]:!w-auto landscape:[&_canvas]:!h-[min(20rem,45vh)]">
             {joinUrl && (
               <Canvas
                 text={joinUrl}
@@ -46,19 +46,19 @@ export default function Lobby({
                   errorCorrectionLevel: 'M',
                   margin: 2,
                   scale: 4,
-                  width: 320,
+                  width: 640,
                 }}
               />
             )}
           </div>
           {joinUrl && (
-            <p className="max-w-[320px] break-all pt-4 text-sm font-semibold text-ink/60">
+            <p className="max-w-[20rem] break-all pt-4 text-sm font-semibold text-ink/60">
               {joinUrl}
             </p>
           )}
         </div>
 
-        <div className="flex h-full flex-col gap-6">
+        <div className="flex min-h-0 flex-col gap-4">
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="font-display text-7xl font-extrabold tabular-nums">
@@ -77,17 +77,16 @@ export default function Lobby({
             </button>
           </div>
 
-          <div className="flex flex-grow flex-wrap content-start gap-3 rounded-2xl border-2 border-white/20 bg-white/5 p-4">
-            {participants.length === 0 && (
-              <p className="m-auto text-lg text-white/60">Waiting for players…</p>
-            )}
-            {participants.map((participant, index) => (
-              <PlayerName
-                key={participant.id}
-                nickname={participant.nickname}
-                joinIndex={index}
-              />
-            ))}
+          <div className="min-h-0 flex-grow">
+            <PlayerNames
+              label="Players who have joined"
+              emptyText="Waiting for players…"
+              players={participants.map(({ id, nickname }, joinIndex) => ({
+                id,
+                nickname,
+                joinIndex,
+              }))}
+            />
           </div>
         </div>
       </div>

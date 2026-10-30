@@ -8,7 +8,7 @@ export default function HostView({ question, isAnswerRevealed }: HostViewProps) 
 
   if (!isAnswerRevealed) {
     return (
-      <div className="choice animate-pop-in justify-between bg-choice-blue py-6 text-2xl">
+      <div className="choice animate-pop-in flex-grow justify-between bg-choice-blue py-6 text-2xl">
         <span className="tabular-nums">{formatValue(settings.min, settings)}</span>
         <span>Pick a number on your phone</span>
         <span className="tabular-nums">{formatValue(settings.max, settings)}</span>
@@ -17,7 +17,7 @@ export default function HostView({ question, isAnswerRevealed }: HostViewProps) 
   }
 
   return (
-    <div className="choice animate-pop-in bg-choice-green py-6 text-3xl">
+    <div className="choice animate-pop-in flex-grow bg-choice-green py-6 text-3xl">
       <span className="flex-grow tabular-nums">{formatValue(settings.answer, settings)}</span>
       <CorrectIcon />
     </div>

@@ -4,7 +4,7 @@ import { PlayerViewProps } from '../types'
 
 export default function PlayerView({ question, onAnswer }: PlayerViewProps) {
   return (
-    <div className="grid gap-3 md:grid-cols-2">
+    <div className="grid flex-grow auto-rows-fr gap-3 md:grid-cols-2">
       {question.choices.map((choice, index) => (
         <button
           key={choice.id}

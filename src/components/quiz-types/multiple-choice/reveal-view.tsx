@@ -4,16 +4,16 @@ import { RevealViewProps } from '../types'
 
 export default function RevealView({ question, answers }: RevealViewProps) {
   return (
-    <div className="flex items-end justify-center gap-4">
+    <div className="flex h-full items-end justify-center gap-4">
       {question.choices.map((choice, index) => {
         const choiceAnswerCount = answers.filter((answer) =>
           answerChoiceIds(answer).includes(choice.id)
         ).length
 
         return (
-          <div key={choice.id} className="flex w-24 flex-col items-center">
+          <div key={choice.id} className="flex h-full w-24 flex-col items-center">
             {/* Bar height is the share of answers that picked this choice, with the count on top */}
-            <div className="flex h-44 w-full flex-col items-center justify-end">
+            <div className="flex min-h-[11rem] w-full flex-grow flex-col items-center justify-end">
               <span className="pb-1 font-display text-2xl font-extrabold tabular-nums">
                 {choiceAnswerCount}
               </span>

@@ -14,7 +14,7 @@ export default function HostView({
   const showResult = isAnswerRevealed && markCorrect
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid flex-grow auto-rows-fr gap-4 md:grid-cols-2">
       {question.choices.map((choice, index) => (
         <div
           key={choice.id}

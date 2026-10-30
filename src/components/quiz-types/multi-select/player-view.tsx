@@ -22,9 +22,9 @@ export default function PlayerView({ question, onAnswer, isTimeUp }: PlayerViewP
     )
 
   return (
-    <div>
+    <div className="flex flex-grow flex-col">
       <p className="pb-3 text-center font-semibold text-white/80">Pick all that apply</p>
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid flex-grow auto-rows-fr gap-3 md:grid-cols-2">
         {question.choices.map((choice, index) => {
           const isPicked = pickedIds.includes(choice.id)
           return (

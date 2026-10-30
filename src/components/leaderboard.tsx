@@ -1,22 +1,18 @@
-import {
-  Answer,
-  GameResult,
-  Participant,
-  Question,
-  QuizSet,
-  supabase,
-} from '@/types/types'
+import { GameResult, supabase } from '@/types/types'
 import { useEffect, useState } from 'react'
 import Confetti from 'react-confetti'
 import useWindowSize from 'react-use/lib/useWindowSize'
 
-export default function Results({
-  quizSet,
+/** The final standings, shown to the host and to every player when the game ends */
+export default function Leaderboard({
   gameId,
+  title,
+  participantId,
 }: {
-  participants: Participant[]
-  quizSet: QuizSet
   gameId: string
+  title: string
+  /** The player looking at this, so their place can be picked out */
+  participantId?: string
 }) {
   const [gameResults, setGameResults] = useState<GameResult[]>([])
 
@@ -41,13 +37,22 @@ export default function Results({
   const podium = gameResults.slice(0, 3)
   const rest = gameResults.slice(3)
 
+  const myIndex = gameResults.findIndex(
+    (result) => result.participant_id === participantId
+  )
+
   return (
-    <div className="mx-auto flex min-h-screen max-w-4xl flex-col items-center gap-8 px-6 py-8">
+    <div className="mx-auto flex min-h-screen max-w-4xl flex-col items-center gap-8 px-4 py-8 sm:px-6">
       <div className="text-center">
         <p className="pill">Final results</p>
-        <h1 className="pt-3 font-display text-4xl font-extrabold md:text-5xl">
-          {quizSet.name}
+        <h1 className="break-words pt-3 font-display text-4xl font-extrabold md:text-5xl">
+          {title}
         </h1>
+        {myIndex >= 0 && (
+          <p className="pt-2 font-display text-xl font-bold text-choice-yellow">
+            You came #{myIndex + 1} with {gameResults[myIndex].total_score ?? 0} pts
+          </p>
+        )}
       </div>
 
       {/* Second, first and third, with first in the middle and tallest */}
@@ -63,6 +68,7 @@ export default function Results({
               <p className="break-all pb-2 text-center font-display text-2xl font-extrabold">
                 {result.nickname}
               </p>
+              {place === myIndex && <YouBadge className="mb-2" />}
               <p className="pb-3 font-semibold text-white/80 tabular-nums">
                 {result.total_score} pts
               </p>
@@ -83,21 +89,40 @@ export default function Results({
           {rest.map((gameResult, index) => (
             <div
               key={gameResult.participant_id}
-              className="flex items-center gap-4 px-5 py-3"
+              className={`flex items-center gap-4 px-5 py-3 ${
+                index + 3 === myIndex ? 'bg-choice-yellow/40' : ''
+              }`}
             >
               <span className="w-8 font-display text-xl font-extrabold text-ink/50">
                 {index + 4}
               </span>
-              <span className="flex-grow font-display text-xl font-bold">
+              <span className="min-w-0 flex-grow break-words font-display text-xl font-bold">
                 {gameResult.nickname}
               </span>
+              {index + 3 === myIndex && <YouBadge />}
               <span className="font-semibold tabular-nums">{gameResult.total_score} pts</span>
             </div>
           ))}
         </div>
       )}
-      <Confetti width={width} height={height} recycle={true} />
+      {/* Fixed so it stays in view when scrolling down the list */}
+      <Confetti
+        width={width}
+        height={height}
+        recycle={true}
+        style={{ position: 'fixed' }}
+      />
     </div>
+  )
+}
+
+function YouBadge({ className = '' }: { className?: string }) {
+  return (
+    <span
+      className={`rounded-full border-2 border-ink bg-choice-yellow px-2 py-0.5 text-sm font-bold text-ink ${className}`}
+    >
+      You
+    </span>
   )
 }
 

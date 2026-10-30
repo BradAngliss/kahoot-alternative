@@ -1,5 +1,7 @@
 'use client'
 
+import FitStage from '@/components/fit-stage'
+import Leaderboard from '@/components/leaderboard'
 import {
   Answer,
   Choice,
@@ -12,7 +14,6 @@ import {
 import { useEffect, useState } from 'react'
 import Lobby from './lobby'
 import Quiz from './quiz'
-import Results from './results'
 
 enum AdminScreens {
   lobby = 'lobby',
@@ -139,8 +140,16 @@ export default function Home({
 
   const [currentQuestionSequence, setCurrentQuestionSequence] = useState(0)
 
+  if (currentScreen == AdminScreens.result) {
+    return (
+      <main className="stage">
+        <Leaderboard gameId={gameId} title={quizSet!.name} />
+      </main>
+    )
+  }
+
   return (
-    <main className="stage">
+    <FitStage>
       {currentScreen == AdminScreens.lobby && (
         <Lobby participants={participants} gameId={gameId}></Lobby>
       )}
@@ -152,13 +161,6 @@ export default function Home({
           participants={participants}
         ></Quiz>
       )}
-      {currentScreen == AdminScreens.result && (
-        <Results
-          participants={participants!}
-          quizSet={quizSet!}
-          gameId={gameId}
-        ></Results>
-      )}
-    </main>
+    </FitStage>
   )
 }

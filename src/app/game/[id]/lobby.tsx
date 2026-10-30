@@ -56,7 +56,7 @@ export default function Lobby({
   }, [gameId])
 
   return (
-    <div className="flex min-h-screen flex-col items-center px-4 py-8">
+    <div className="stage-screen items-center px-4 pt-6">
       <Wordmark />
       <div className="flex w-full max-w-sm flex-grow flex-col justify-center">
         {!participant && (

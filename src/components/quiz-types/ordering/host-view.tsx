@@ -9,7 +9,7 @@ export default function HostView({ question, isAnswerRevealed }: HostViewProps) 
   const choices = isAnswerRevealed ? choicesInPosition(question) : shuffledChoices
 
   return (
-    <div className="mx-auto grid w-full max-w-3xl gap-3">
+    <div className="mx-auto grid w-full max-w-3xl flex-grow auto-rows-fr gap-3">
       {choices.map((choice, index) => (
         <div
           key={choice.id}

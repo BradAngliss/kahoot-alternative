@@ -24,6 +24,32 @@
       );
   }
 
+  /* Exactly one screen tall. dvh allows for a phone's address bar. */
+  .stage-fit {
+    @apply min-h-0 overflow-hidden;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /* A screen inside it. Padding isn't measured when content overflows, so the
+     space below the last item comes from the gap before this marker. */
+  .stage-screen {
+    @apply flex h-full flex-col gap-4;
+  }
+
+  .stage-screen::after {
+    @apply shrink-0;
+    content: '';
+    height: 1px;
+  }
+
+  /* The countdown library sets its size in px. This makes it scale with rem. */
+  .stage-timer > div,
+  .stage-timer svg {
+    width: 8.75rem !important;
+    height: 8.75rem !important;
+  }
+
   .card {
     @apply rounded-2xl border-2 border-ink bg-white text-ink shadow-chunky;
   }
