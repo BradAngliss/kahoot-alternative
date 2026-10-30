@@ -23,3 +23,14 @@ export const quizVariants: Record<QuestionType, QuizVariant> = {
 
 export const getQuizVariant = (question: Question): QuizVariant =>
   quizVariants[question.type]
+
+/** Names shown to hosts, e.g. on the dashboard */
+export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
+  multiple_choice: 'Multiple choice',
+  true_false: 'True or false',
+  multi_select: 'Multi-select',
+  type_answer: 'Type the answer',
+  slider: 'Slider',
+  ordering: 'Put in order',
+  poll: 'Poll',
+}

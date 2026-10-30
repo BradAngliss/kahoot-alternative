@@ -1,5 +1,7 @@
 'use client'
 
+import FitStage from '@/components/fit-stage'
+import Leaderboard from '@/components/leaderboard'
 import {
   Answer,
   Choice,
@@ -12,7 +14,6 @@ import {
 import { useEffect, useState } from 'react'
 import Lobby from './lobby'
 import Quiz from './quiz'
-import Results from './results'
 
 enum AdminScreens {
   lobby = 'lobby',
@@ -53,6 +54,10 @@ export default function Home({
           ascending: true,
           referencedTable: 'questions',
         })
+        .order('position', {
+          ascending: true,
+          referencedTable: 'questions.choices',
+        })
         .single()
       if (error) {
         console.error(error.message)
@@ -60,48 +65,59 @@ export default function Home({
         return
       }
       setQuizSet(data)
+
+      // Load the pictures now, so they don't appear late in front of the room
+      data.questions.forEach(({ image_url }) => {
+        if (image_url) new Image().src = image_url
+      })
     }
 
-    const setGameListner = async () => {
+    // A new name each time, because supabase.channel returns any channel with the
+    // same name that's still being removed, and that one can't take new listeners
+    const channel = supabase
+      .channel(`game:${gameId}:${Math.random()}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'participants',
+          filter: `game_id=eq.${gameId}`,
+        },
+        (payload) => {
+          const participant = payload.new as Participant
+          setParticipants((currentParticipants) => {
+            // Already there if they joined just before the list below loaded
+            return currentParticipants.some(({ id }) => id === participant.id)
+              ? currentParticipants
+              : [...currentParticipants, participant]
+          })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'games',
+          filter: `id=eq.${gameId}`,
+        },
+        (payload) => {
+          // start the quiz game
+          const game = payload.new as Game
+          setCurrentQuestionSequence(game.current_question_sequence)
+          setCurrentScreen(game.phase as AdminScreens)
+        }
+      )
+      .subscribe()
+
+    const loadGame = async () => {
       const { data } = await supabase
         .from('participants')
         .select()
         .eq('game_id', gameId)
         .order('created_at')
       if (data) setParticipants(data)
-
-      supabase
-        .channel('game')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'participants',
-            filter: `game_id=eq.${gameId}`,
-          },
-          (payload) => {
-            setParticipants((currentParticipants) => {
-              return [...currentParticipants, payload.new as Participant]
-            })
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'games',
-            filter: `id=eq.${gameId}`,
-          },
-          (payload) => {
-            // start the quiz game
-            const game = payload.new as Game
-            setCurrentQuestionSequence(game.current_question_sequence)
-            setCurrentScreen(game.phase as AdminScreens)
-          }
-        )
-        .subscribe()
 
       const { data: gameData, error: gameError } = await supabase
         .from('games')
@@ -120,13 +136,25 @@ export default function Home({
     }
 
     getQuestions()
-    setGameListner()
+    loadGame()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [gameId])
 
   const [currentQuestionSequence, setCurrentQuestionSequence] = useState(0)
 
+  if (currentScreen == AdminScreens.result) {
+    return (
+      <main className="stage">
+        <Leaderboard gameId={gameId} title={quizSet!.name} />
+      </main>
+    )
+  }
+
   return (
-    <main className="bg-green-600 min-h-screen">
+    <FitStage>
       {currentScreen == AdminScreens.lobby && (
         <Lobby participants={participants} gameId={gameId}></Lobby>
       )}
@@ -138,13 +166,6 @@ export default function Home({
           participants={participants}
         ></Quiz>
       )}
-      {currentScreen == AdminScreens.result && (
-        <Results
-          participants={participants!}
-          quizSet={quizSet!}
-          gameId={gameId}
-        ></Results>
-      )}
-    </main>
+    </FitStage>
   )
 }

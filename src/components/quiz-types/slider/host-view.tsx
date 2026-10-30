@@ -6,21 +6,20 @@ import { formatValue } from './format'
 export default function HostView({ question, isAnswerRevealed }: HostViewProps) {
   const settings = sliderSettings(question)
 
+  if (!isAnswerRevealed) {
+    return (
+      <div className="choice animate-pop-in flex-grow justify-between bg-choice-blue py-6 text-2xl">
+        <span className="tabular-nums">{formatValue(settings.min, settings)}</span>
+        <span>Pick a number on your phone</span>
+        <span className="tabular-nums">{formatValue(settings.max, settings)}</span>
+      </div>
+    )
+  }
+
   return (
-    <div className="p-4">
-      {!isAnswerRevealed && (
-        <div className="px-4 py-6 w-full text-2xl rounded font-bold text-white flex justify-between bg-blue-500">
-          <div>{formatValue(settings.min, settings)}</div>
-          <div>Pick a number on your device</div>
-          <div>{formatValue(settings.max, settings)}</div>
-        </div>
-      )}
-      {isAnswerRevealed && (
-        <div className="px-4 py-6 w-full text-2xl rounded font-bold text-white flex justify-between bg-green-500">
-          <div>{formatValue(settings.answer, settings)}</div>
-          <CorrectIcon />
-        </div>
-      )}
+    <div className="choice animate-pop-in flex-grow bg-choice-green py-6 text-3xl">
+      <span className="flex-grow tabular-nums">{formatValue(settings.answer, settings)}</span>
+      <CorrectIcon />
     </div>
   )
 }

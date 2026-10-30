@@ -5,19 +5,18 @@ import { HostViewProps } from '../types'
 export default function HostView({ question, isAnswerRevealed }: HostViewProps) {
   const { accepted_answers } = typeAnswerSettings(question)
 
+  if (!isAnswerRevealed) {
+    return (
+      <div className="choice animate-pop-in flex-grow justify-center bg-choice-blue py-6 text-2xl">
+        Type your answer on your phone
+      </div>
+    )
+  }
+
   return (
-    <div className="p-4">
-      {!isAnswerRevealed && (
-        <div className="px-4 py-6 w-full text-2xl rounded font-bold text-white text-center bg-blue-500">
-          Type your answer on your device
-        </div>
-      )}
-      {isAnswerRevealed && (
-        <div className="px-4 py-6 w-full text-2xl rounded font-bold text-white flex justify-between bg-green-500">
-          <div>{accepted_answers.join(' / ')}</div>
-          <CorrectIcon />
-        </div>
-      )}
+    <div className="choice animate-pop-in flex-grow bg-choice-green py-6 text-3xl">
+      <span className="flex-grow">{accepted_answers.join(' / ')}</span>
+      <CorrectIcon />
     </div>
   )
 }

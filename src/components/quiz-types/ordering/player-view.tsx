@@ -53,8 +53,8 @@ export default function PlayerView({ question, onAnswer, isTimeUp }: PlayerViewP
   }
 
   return (
-    <div className="p-4">
-      <p className="text-white text-center pb-2">
+    <div className="flex flex-grow flex-col">
+      <p className="pb-3 text-center font-semibold text-white/80">
         Drag these into order, first at the top
       </p>
       <DndContext
@@ -64,20 +64,19 @@ export default function PlayerView({ question, onAnswer, isTimeUp }: PlayerViewP
         onDragEnd={onDragEnd}
       >
         <SortableContext items={choices} strategy={verticalListSortingStrategy}>
-          {choices.map((choice, index) => (
-            <SortableItem
-              key={choice.id}
-              choice={choice}
-              position={index + 1}
-              colorIndex={colorIndexes.get(choice.id) ?? index}
-            />
-          ))}
+          <div className="flex flex-grow flex-col">
+            {choices.map((choice, index) => (
+              <SortableItem
+                key={choice.id}
+                choice={choice}
+                position={index + 1}
+                colorIndex={colorIndexes.get(choice.id) ?? index}
+              />
+            ))}
+          </div>
         </SortableContext>
       </DndContext>
-      <button
-        onClick={submit}
-        className="mt-2 w-full py-4 text-xl rounded font-bold bg-white text-black"
-      >
+      <button onClick={submit} className="btn btn-primary mt-4 w-full">
         Submit
       </button>
     </div>
@@ -103,19 +102,19 @@ function SortableItem({
       {...attributes}
       {...listeners}
       // touch-none stops the page scrolling while dragging on a phone
-      className={`flex items-center my-1 rounded text-white touch-none select-none ${choiceColor(
-        colorIndex
-      )} ${
+      className={`choice my-2 flex-1 touch-none select-none ${choiceColor(colorIndex)} ${
         isDragging
-          ? 'relative z-10 cursor-grabbing shadow-xl ring-4 ring-white'
+          ? 'relative z-10 cursor-grabbing scale-[1.02] shadow-chunky-lg ring-4 ring-white'
           : 'cursor-grab'
       }`}
     >
-      <div className="px-4 text-xl font-bold">{position}</div>
-      <div className="flex-grow py-3 text-xl md:text-2xl">{choice.body}</div>
-      <div className="px-4 text-2xl" aria-hidden="true">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 border-ink bg-white text-base font-extrabold">
+        {position}
+      </span>
+      <span className="flex-grow">{choice.body}</span>
+      <span className="text-2xl text-ink/60" aria-hidden="true">
         ⠿
-      </div>
+      </span>
     </div>
   )
 }

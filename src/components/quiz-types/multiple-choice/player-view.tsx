@@ -1,20 +1,21 @@
+import ChoiceLetter from '../choice-letter'
 import { choiceColor } from '../colors'
 import { PlayerViewProps } from '../types'
 
 export default function PlayerView({ question, onAnswer }: PlayerViewProps) {
   return (
-    <div className="flex justify-between flex-wrap p-4">
+    <div className="grid flex-grow auto-rows-fr gap-3 md:grid-cols-2">
       {question.choices.map((choice, index) => (
-        <div key={choice.id} className="w-1/2 p-1">
-          <button
-            onClick={() => onAnswer({ choice_ids: [choice.id] })}
-            className={`px-4 py-6 w-full text-xl rounded text-white flex justify-between md:text-2xl md:font-bold
-            ${choiceColor(index)}
-           `}
-          >
-            <div>{choice.body}</div>
-          </button>
-        </div>
+        <button
+          key={choice.id}
+          onClick={() => onAnswer({ choice_ids: [choice.id] })}
+          className={`choice animate-pop-in hover:-translate-y-0.5 active:translate-y-1 active:shadow-none ${choiceColor(
+            index
+          )}`}
+        >
+          <ChoiceLetter index={index} />
+          <span>{choice.body}</span>
+        </button>
       ))}
     </div>
   )

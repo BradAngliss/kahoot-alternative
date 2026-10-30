@@ -2,6 +2,8 @@
 
 import React, { FormEvent, useEffect, useRef, useState } from 'react'
 import { RealtimeChannel } from '@supabase/supabase-js'
+import FitStage from '@/components/fit-stage'
+import Leaderboard from '@/components/leaderboard'
 import { Choice, Game, Participant, Question, supabase } from '@/types/types'
 import Lobby from './lobby'
 import Quiz from './quiz'
@@ -57,6 +59,7 @@ export default function Home({
       .select(`*, choices(*)`)
       .eq('quiz_set_id', quizSetId)
       .order('order', { ascending: true })
+      .order('position', { ascending: true, referencedTable: 'choices' })
     if (error) {
       getQuestions(quizSetId)
       return
@@ -100,8 +103,20 @@ export default function Home({
     }
   }, [gameId])
 
+  if (currentScreen == Screens.results) {
+    return (
+      <main className="stage">
+        <Leaderboard
+          gameId={gameId}
+          title={participant!.nickname}
+          participantId={participant!.id}
+        />
+      </main>
+    )
+  }
+
   return (
-    <main className="bg-green-500 min-h-screen">
+    <FitStage>
       {currentScreen == Screens.lobby && (
         <Lobby
           onRegisterCompleted={onRegisterCompleted}
@@ -116,20 +131,6 @@ export default function Home({
           isAnswerRevealed={isAnswerRevealed}
         ></Quiz>
       )}
-      {currentScreen == Screens.results && (
-        <Results participant={participant!}></Results>
-      )}
-    </main>
-  )
-}
-
-function Results({ participant }: { participant: Participant }) {
-  return (
-    <div className="flex justify-center items-center min-h-screen text-center">
-      <div className="p-8 bg-black text-white rounded-lg">
-        <h2 className="text-2xl pb-4">Hey {participant.nickname}！</h2>
-        <p>Thanks for playing 🎉</p>
-      </div>
-    </div>
+    </FitStage>
   )
 }

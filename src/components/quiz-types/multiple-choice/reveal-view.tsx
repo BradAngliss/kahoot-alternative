@@ -1,36 +1,33 @@
-import { choiceColor } from '../colors'
+import { choiceColor, choiceLetter } from '../colors'
 import { answerChoiceIds } from '../json'
 import { RevealViewProps } from '../types'
 
 export default function RevealView({ question, answers }: RevealViewProps) {
   return (
-    <div className="flex justify-center">
+    <div className="flex h-full items-end justify-center gap-4">
       {question.choices.map((choice, index) => {
         const choiceAnswerCount = answers.filter((answer) =>
           answerChoiceIds(answer).includes(choice.id)
         ).length
 
         return (
-          <div
-            key={choice.id}
-            className="mx-2 h-48 w-24 flex flex-col items-stretch justify-end"
-          >
-            <div className="flex-grow relative">
+          <div key={choice.id} className="flex h-full w-24 flex-col items-center">
+            {/* Bar height is the share of answers that picked this choice, with the count on top */}
+            <div className="flex min-h-[11rem] w-full flex-grow flex-col items-center justify-end">
+              <span className="pb-1 font-display text-2xl font-extrabold tabular-nums">
+                {choiceAnswerCount}
+              </span>
               <div
                 style={{
                   height: `${(choiceAnswerCount * 100) / (answers.length || 1)}%`,
                 }}
-                className={`absolute bottom-0 left-0 right-0 mb-1 rounded-t ${choiceColor(
+                className={`min-h-[6px] w-full rounded-t-xl border-2 border-b-0 border-ink transition-all duration-500 ${choiceColor(
                   index
                 )}`}
               ></div>
             </div>
-            <div
-              className={`mt-1 text-white text-lg text-center py-2 rounded-b ${choiceColor(
-                index
-              )}`}
-            >
-              {choiceAnswerCount}
+            <div className="w-full rounded-b-xl border-2 border-ink bg-white py-1 text-center font-display text-lg font-extrabold text-ink">
+              {choiceLetter(index)}
             </div>
           </div>
         )

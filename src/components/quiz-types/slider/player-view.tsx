@@ -18,12 +18,12 @@ export default function PlayerView({ question, onAnswer, isTimeUp }: PlayerViewP
   useAutoSubmit(isTimeUp, submit)
 
   return (
-    <div className="p-4">
-      <div className="text-white text-5xl font-bold text-center pb-4">
+    <div className="card animate-pop-in p-5">
+      <div className="pb-4 text-center font-display text-6xl font-extrabold tabular-nums">
         {formatValue(value, settings)}
       </div>
       <input
-        className="w-full accent-yellow-500"
+        className="h-3 w-full cursor-pointer accent-stage"
         type="range"
         min={settings.min}
         max={settings.max}
@@ -32,14 +32,11 @@ export default function PlayerView({ question, onAnswer, isTimeUp }: PlayerViewP
         onChange={(e) => setValue(Number(e.currentTarget.value))}
         aria-label="Your answer"
       />
-      <div className="flex justify-between text-white pb-2">
-        <div>{formatValue(settings.min, settings)}</div>
-        <div>{formatValue(settings.max, settings)}</div>
+      <div className="flex justify-between pt-1 text-sm font-semibold text-ink/60">
+        <span>{formatValue(settings.min, settings)}</span>
+        <span>{formatValue(settings.max, settings)}</span>
       </div>
-      <button
-        onClick={submit}
-        className="mt-2 w-full py-4 text-xl rounded font-bold bg-white text-black"
-      >
+      <button onClick={submit} className="btn btn-accent mt-4 w-full">
         Submit
       </button>
     </div>

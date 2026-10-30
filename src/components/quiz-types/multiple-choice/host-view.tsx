@@ -1,3 +1,4 @@
+import ChoiceLetter from '../choice-letter'
 import { choiceColor } from '../colors'
 import { CorrectIcon, IncorrectIcon } from '../icons'
 import { HostViewProps } from '../types'
@@ -13,23 +14,20 @@ export default function HostView({
   const showResult = isAnswerRevealed && markCorrect
 
   return (
-    <div className="flex justify-between flex-wrap p-4">
+    <div className="grid flex-grow auto-rows-fr gap-4 md:grid-cols-2">
       {question.choices.map((choice, index) => (
-        <div key={choice.id} className="w-1/2 p-1">
-          <div
-            className={`px-4 py-6 w-full text-2xl rounded font-bold text-white flex justify-between
-            ${choiceColor(index)}
-            ${showResult && !choice.is_correct ? 'opacity-60' : ''}
-           `}
-          >
-            <div>{choice.body}</div>
-            {showResult && (
-              <div>
-                {choice.is_correct && <CorrectIcon />}
-                {!choice.is_correct && <IncorrectIcon />}
-              </div>
-            )}
-          </div>
+        <div
+          key={choice.id}
+          className={`choice animate-pop-in py-5 text-2xl md:text-3xl ${
+            // Wrong answers fade to white so the right one stands out
+            showResult && !choice.is_correct
+              ? 'border-ink/30 bg-white/50 text-ink/50 shadow-none'
+              : choiceColor(index)
+          }`}
+        >
+          <ChoiceLetter index={index} />
+          <span className="flex-grow">{choice.body}</span>
+          {showResult && (choice.is_correct ? <CorrectIcon /> : <IncorrectIcon />)}
         </div>
       ))}
     </div>

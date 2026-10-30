@@ -1,4 +1,5 @@
 import { CorrectIcon, IncorrectIcon } from '@/components/quiz-types/icons'
+import QuestionCard from '@/components/quiz-types/question-card'
 import QuestionProgress from '@/components/quiz-types/question-progress'
 import { getQuizVariant } from '@/components/quiz-types/registry'
 import { AnswerResponse, AnswerResult } from '@/components/quiz-types/types'
@@ -85,32 +86,33 @@ export default function Quiz({
   const isClose = !!result && !result.isCorrect && result.correctness > 0
 
   return (
-    <div className="h-screen flex flex-col items-stretch bg-slate-900 relative">
-      <div className="text-center">
-        <h2 className="pb-4 text-2xl bg-white font-bold mx-4 my-12 p-4 rounded inline-block md:text-3xl md:px-24">
-          {question.body}
-        </h2>
-      </div>
+    <div className="stage-screen px-4 pt-4">
+      <QuestionProgress question={question} questionCount={questionCount} />
+
+      <QuestionCard body={question.body} />
 
       {!isAnswerRevealed && playerAnswer && (
-        <div className="flex-grow flex justify-center items-center">
-          <div className="text-white text-2xl text-center p-4">
-            Wait for others to answer...
+        <div className="flex flex-grow items-center justify-center">
+          <div className="card animate-pop-in px-8 py-6 text-center">
+            <p className="font-display text-2xl font-extrabold">Answer locked in</p>
+            <p className="pt-1 text-ink/70">Waiting for everyone else…</p>
           </div>
         </div>
       )}
 
       {!hasShownChoices && !isAnswerRevealed && (
-        <div className="flex-grow text-transparent flex justify-center">
+        <div className="stage-timer flex flex-grow items-center justify-center font-display text-5xl font-extrabold">
           <CountdownCircleTimer
             onComplete={() => {
               setChoicesShownFor(question.id)
             }}
             isPlaying
             duration={TIME_TIL_CHOICE_REVEAL / 1000}
-            colors={['#fff', '#fff', '#fff', '#fff']}
-            trailColor={'transparent' as ColorFormat}
+            colors={['#ffc93c', '#ffc93c', '#ffc93c', '#ffc93c']}
+            trailColor={'rgba(255,255,255,0.2)' as ColorFormat}
             colorsTime={[7, 5, 2, 0]}
+            strokeWidth={10}
+            size={140}
           >
             {({ remainingTime }) => remainingTime}
           </CountdownCircleTimer>
@@ -118,44 +120,47 @@ export default function Quiz({
       )}
 
       {hasShownChoices && !isAnswerRevealed && !playerAnswer && (
-        <div className="flex-grow flex flex-col items-stretch">
-          <div className="flex-grow"></div>
+        <div className="flex flex-grow flex-col justify-center">
           <PlayerView question={question} onAnswer={answer} isTimeUp={isTimeUp} />
         </div>
       )}
 
       {isAnswerRevealed && !scored && (
-        <div className="flex-grow flex justify-center items-center">
-          <h2 className="text-white text-2xl text-center p-4">
-            {playerAnswer ? 'Thanks for voting' : 'You did not vote'}
-          </h2>
+        <div className="flex flex-grow items-center justify-center">
+          <div className="card animate-pop-in px-8 py-6 text-center">
+            <p className="font-display text-2xl font-extrabold">
+              {playerAnswer ? 'Thanks for voting' : 'You did not vote'}
+            </p>
+          </div>
         </div>
       )}
 
       {isAnswerRevealed && scored && (
-        <div className="flex-grow flex justify-center items-center flex-col">
-          <h2 className="text-white text-2xl text-center pb-2">
-            {result?.isCorrect ? 'Correct' : isClose ? 'Close!' : 'Incorrect'}
-          </h2>
-          <div
-            className={`text-white rounded-full p-4  ${
-              result?.isCorrect
-                ? 'bg-green-500'
-                : isClose
-                ? 'bg-yellow-500'
-                : 'bg-red-500'
-            }`}
-          >
-            {(result?.isCorrect || isClose) && <CorrectIcon />}
-            {!result?.isCorrect && !isClose && <IncorrectIcon />}
+        <div className="flex flex-grow items-center justify-center">
+          <div className="card flex animate-pop-in flex-col items-center px-10 py-8 text-center">
+            <div
+              className={`rounded-full border-2 border-ink p-4 ${
+                result?.isCorrect
+                  ? 'bg-choice-green'
+                  : isClose
+                  ? 'bg-choice-yellow'
+                  : 'bg-choice-red'
+              }`}
+            >
+              {(result?.isCorrect || isClose) && <CorrectIcon />}
+              {!result?.isCorrect && !isClose && <IncorrectIcon />}
+            </div>
+            <h2 className="pt-4 font-display text-3xl font-extrabold">
+              {result?.isCorrect ? 'Correct' : isClose ? 'Close!' : 'Incorrect'}
+            </h2>
+            {result && result.score > 0 && (
+              <p className="mt-3 rounded-full border-2 border-ink bg-choice-yellow px-4 py-1 font-display text-lg font-bold">
+                +{result.score} points
+              </p>
+            )}
           </div>
-          {isClose && (
-            <p className="text-white text-xl pt-2">+{result.score} points</p>
-          )}
         </div>
       )}
-
-      <QuestionProgress question={question} questionCount={questionCount} />
     </div>
   )
 }

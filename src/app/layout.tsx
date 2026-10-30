@@ -1,8 +1,14 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Bricolage_Grotesque, Inter } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
+
+// Headings, answers and buttons
+const display = Bricolage_Grotesque({
+  subsets: ['latin'],
+  variable: '--font-display',
+})
 
 export const metadata: Metadata = {
   title: 'SupaQuiz',
@@ -15,8 +21,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang="en" className={`${inter.variable} ${display.variable}`}>
+      <body>{children}</body>
     </html>
   )
 }

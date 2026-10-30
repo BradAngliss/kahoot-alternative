@@ -9,16 +9,20 @@ export default function HostView({ question, isAnswerRevealed }: HostViewProps) 
   const choices = isAnswerRevealed ? choicesInPosition(question) : shuffledChoices
 
   return (
-    <div className="p-4 max-w-2xl w-full mx-auto">
+    <div className="mx-auto grid w-full max-w-3xl flex-grow auto-rows-fr gap-3">
       {choices.map((choice, index) => (
         <div
           key={choice.id}
-          className={`px-4 py-3 my-1 w-full text-2xl rounded font-bold text-white flex ${
-            isAnswerRevealed ? 'bg-green-500' : choiceColor(index)
+          className={`choice animate-pop-in text-2xl ${
+            isAnswerRevealed ? 'bg-choice-green' : choiceColor(index)
           }`}
         >
-          {isAnswerRevealed && <div className="pr-4">{index + 1}</div>}
-          <div>{choice.body}</div>
+          {isAnswerRevealed && (
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 border-ink bg-white text-base font-extrabold">
+              {index + 1}
+            </span>
+          )}
+          <span>{choice.body}</span>
         </div>
       ))}
     </div>

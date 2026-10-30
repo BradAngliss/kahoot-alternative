@@ -1,9 +1,12 @@
+import PlayerNames from '@/components/player-names'
+import QuestionCard from '@/components/quiz-types/question-card'
+import QuestionImage from '@/components/quiz-types/question-image'
 import QuestionProgress from '@/components/quiz-types/question-progress'
 import { getQuizVariant } from '@/components/quiz-types/registry'
 import { TIME_TIL_CHOICE_REVEAL, TIME_TIL_NEXT_QUESTION } from '@/constants'
 import { Answer, Participant, Question, supabase } from '@/types/types'
 import { useEffect, useRef, useState } from 'react'
-import { CountdownCircleTimer } from 'react-countdown-circle-timer'
+import { ColorFormat, CountdownCircleTimer } from 'react-countdown-circle-timer'
 
 export default function Quiz({
   question: question,
@@ -21,10 +24,6 @@ export default function Quiz({
   const [hasShownChoices, setHasShownChoices] = useState(false)
 
   const [answers, setAnswers] = useState<Answer[]>([])
-
-  const answerStateRef = useRef<Answer[]>()
-
-  answerStateRef.current = answers
 
   const { HostView, RevealView } = getQuizVariant(question)
 
@@ -97,13 +96,6 @@ export default function Quiz({
           setAnswers((currentAnswers) => {
             return [...currentAnswers, payload.new as Answer]
           })
-
-          if (
-            (answerStateRef.current?.length ?? 0) + 1 ===
-            participants.length
-          ) {
-            onTimeUp()
-          }
         }
       )
       .subscribe()
@@ -112,6 +104,18 @@ export default function Quiz({
       supabase.removeChannel(channel)
     }
   }, [question.id])
+
+  // Show the answer as soon as everyone has answered. Checked after rendering,
+  // because answers arrive in batches and can land before the count updates
+  useEffect(() => {
+    if (
+      !isAnswerRevealed &&
+      participants.length > 0 &&
+      answers.length >= participants.length
+    ) {
+      onTimeUp()
+    }
+  }, [answers.length, participants.length])
 
   // Once the answer is shown, count down and move on to the next question
   useEffect(() => {
@@ -135,56 +139,110 @@ export default function Quiz({
   }, [isAnswerRevealed, question.id])
 
   return (
-    <div className="h-screen flex flex-col items-stretch bg-slate-900 relative">
-      <div className="absolute right-4 top-4">
+    <div className="stage-screen mx-auto max-w-[max(90vw,1152px)] px-6 pt-4">
+      <div className="flex items-center gap-4">
+        <div className="flex-grow">
+          <QuestionProgress question={question} questionCount={questionCount} />
+        </div>
         {isAnswerRevealed && (
-          <button
-            className="p-2 bg-white text-black rounded hover:bg-gray-200"
-            onClick={getNextQuestion}
-          >
+          <button className="btn btn-primary py-2" onClick={getNextQuestion}>
             {secondsUntilNext === null ? 'Next' : `Next in ${secondsUntilNext}s`}
           </button>
         )}
       </div>
 
-      <div className="text-center">
-        <h2 className="pb-4 text-3xl bg-white font-bold mx-24 my-12 p-4 rounded inline-block">
-          {question.body}
-        </h2>
-      </div>
+      <QuestionCard body={question.body} size="lg" />
 
-      <div className="flex-grow text-white px-8">
-        {hasShownChoices && !isAnswerRevealed && (
-          <div className="flex justify-between items-center">
-            <div className="text-5xl">
-              <CountdownCircleTimer
-                onComplete={() => {
-                  onTimeUp()
-                }}
-                isPlaying
-                duration={question.time_limit_seconds}
-                colors={['#004777', '#F7B801', '#A30000', '#A30000']}
-                colorsTime={[7, 5, 2, 0]}
-              >
-                {({ remainingTime }) => remainingTime}
-              </CountdownCircleTimer>
+      <div
+        className={`flex flex-grow flex-col gap-4 ${
+          question.image_url ? 'lg:landscape:flex-row' : ''
+        }`}
+      >
+        {question.image_url && <QuestionImage url={question.image_url} />}
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          {!hasShownChoices && (
+            <div className="flex flex-grow flex-col items-center justify-center gap-4 font-display">
+              <div className="stage-timer text-5xl font-extrabold">
+                <CountdownCircleTimer
+                  key={question.id}
+                  isPlaying
+                  duration={TIME_TIL_CHOICE_REVEAL / 1000}
+                  colors={['#ffc93c', '#ffc93c', '#ffc93c', '#ffc93c']}
+                  colorsTime={[7, 5, 2, 0]}
+                  trailColor={'rgba(255,255,255,0.2)' as ColorFormat}
+                  strokeWidth={12}
+                  size={140}
+                >
+                  {({ remainingTime }) => remainingTime}
+                </CountdownCircleTimer>
+              </div>
+              <p className="text-3xl font-bold text-white/80">Get ready…</p>
             </div>
-            <div className="text-center">
-              <div className="text-6xl pb-4">{answers.length}</div>
-              <div className="text-3xl">Answers</div>
+          )}
+
+          {/* Half of the spare space, shared with the choices below. Names never add
+              to it. A narrow window puts them under the timer, where they have room. */}
+          {hasShownChoices && !isAnswerRevealed && (
+            <div className="flex min-h-[16rem] flex-1 flex-col gap-4 md:min-h-[8.75rem] md:flex-row md:gap-6">
+              <div className="flex shrink-0 items-center gap-6 font-display">
+                <div className="stage-timer text-5xl font-extrabold">
+                  <CountdownCircleTimer
+                    onComplete={() => {
+                      onTimeUp()
+                    }}
+                    isPlaying
+                    duration={question.time_limit_seconds}
+                    colors={['#ffffff', '#ffc93c', '#ff5c7a', '#ff5c7a']}
+                    colorsTime={[7, 5, 2, 0]}
+                    trailColor={'rgba(255,255,255,0.2)' as ColorFormat}
+                    strokeWidth={12}
+                    size={140}
+                  >
+                    {({ remainingTime }) => remainingTime}
+                  </CountdownCircleTimer>
+                </div>
+                <div className="text-center">
+                  <div className="text-6xl font-extrabold tabular-nums">{answers.length}</div>
+                  <div className="text-xl font-semibold text-white/80">
+                    of {participants.length} answered
+                  </div>
+                </div>
+              </div>
+              <div className="min-h-0 min-w-0 flex-grow">
+                <PlayerNames
+                  label="Players who have answered"
+                  emptyText="Waiting for answers…"
+                  players={answers.flatMap((answer) => {
+                    const joinIndex = participants.findIndex(
+                      (participant) => participant.id === answer.participant_id
+                    )
+                    if (joinIndex === -1) return []
+                    return [
+                      {
+                        id: answer.id,
+                        nickname: participants[joinIndex].nickname,
+                        joinIndex,
+                      },
+                    ]
+                  })}
+                />
+              </div>
             </div>
-          </div>
-        )}
-        {isAnswerRevealed && (
-          <RevealView question={question} answers={answers} />
-        )}
+          )}
+
+          {isAnswerRevealed && (
+            <div className="flex flex-1 flex-col justify-center">
+              <RevealView question={question} answers={answers} />
+            </div>
+          )}
+
+          {hasShownChoices && (
+            <div className="flex flex-1 flex-col justify-center">
+              <HostView question={question} isAnswerRevealed={isAnswerRevealed} />
+            </div>
+          )}
+        </div>
       </div>
-
-      {hasShownChoices && (
-        <HostView question={question} isAnswerRevealed={isAnswerRevealed} />
-      )}
-
-      <QuestionProgress question={question} questionCount={questionCount} />
     </div>
   )
 }

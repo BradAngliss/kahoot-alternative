@@ -9,7 +9,11 @@ export default function RevealView({ question, answers }: RevealViewProps) {
     .filter((value): value is number => value !== null)
 
   if (guesses.length === 0) {
-    return <div className="text-2xl text-center">No answers</div>
+    return (
+      <p className="text-center font-display text-2xl font-bold text-white/80">
+        No answers
+      </p>
+    )
   }
 
   const average = guesses.reduce((sum, value) => sum + value, 0) / guesses.length
@@ -17,29 +21,31 @@ export default function RevealView({ question, answers }: RevealViewProps) {
   const range = settings.max - settings.min || 1
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="mx-auto w-full max-w-3xl">
       {/* Each guess as a dot along the range, with the answer marked */}
-      <div className="relative h-12 my-4 bg-slate-700 rounded">
+      <div className="relative my-6 h-14 rounded-2xl border-2 border-ink bg-white">
         {guesses.map((value, index) => (
           <div
             key={index}
-            className="absolute top-3 w-6 h-6 -ml-3 rounded-full bg-yellow-500 opacity-80"
+            className="absolute top-3.5 -ml-3 h-6 w-6 rounded-full border-2 border-ink bg-choice-yellow"
             style={{ left: `${((value - settings.min) * 100) / range}%` }}
           ></div>
         ))}
         <div
-          className="absolute -top-1 -bottom-1 w-1 -ml-0.5 bg-green-500"
+          className="absolute -bottom-2 -top-2 -ml-1 w-2 rounded-full border-2 border-ink bg-choice-green"
           style={{ left: `${((settings.answer - settings.min) * 100) / range}%` }}
         ></div>
       </div>
-      <div className="flex justify-around text-center">
-        <div>
-          <div className="text-4xl">{formatValue(Math.round(average * 10) / 10, settings)}</div>
-          <div className="text-xl">Average guess</div>
+      <div className="flex justify-center gap-6 text-center">
+        <div className="card px-6 py-3">
+          <div className="font-display text-4xl font-extrabold tabular-nums">
+            {formatValue(Math.round(average * 10) / 10, settings)}
+          </div>
+          <div className="text-sm font-semibold text-ink/60">Average guess</div>
         </div>
-        <div>
-          <div className="text-4xl">{exact}</div>
-          <div className="text-xl">Exactly right</div>
+        <div className="card px-6 py-3">
+          <div className="font-display text-4xl font-extrabold tabular-nums">{exact}</div>
+          <div className="text-sm font-semibold text-ink/60">Exactly right</div>
         </div>
       </div>
     </div>

@@ -22,17 +22,21 @@ export default function RevealView({ question, answers }: RevealViewProps) {
     .slice(0, MAX_ANSWERS_SHOWN)
 
   return (
-    <div className="flex flex-col items-center">
-      {topAnswers.length === 0 && <div className="text-2xl">No answers</div>}
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-2">
+      {topAnswers.length === 0 && (
+        <p className="text-center font-display text-2xl font-bold text-white/80">
+          No answers
+        </p>
+      )}
       {topAnswers.map(([key, { text, count }]) => (
         <div
           key={key}
-          className={`flex justify-between w-full max-w-xl my-1 px-4 py-2 rounded text-xl ${
-            accepted.includes(key) ? 'bg-green-500' : 'bg-slate-700'
+          className={`flex animate-pop-in items-center justify-between rounded-xl border-2 border-ink px-4 py-2 font-display text-xl font-bold text-ink ${
+            accepted.includes(key) ? 'bg-choice-green' : 'bg-white'
           }`}
         >
-          <div>{text}</div>
-          <div className="font-bold">{count}</div>
+          <span>{text}</span>
+          <span className="tabular-nums">{count}</span>
         </div>
       ))}
     </div>
